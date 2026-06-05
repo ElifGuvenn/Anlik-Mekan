@@ -1,0 +1,52 @@
+@model List<AnlikMekanCore.Models.Entities.Bildirim>
+@{ ViewData["Title"] = "Bildirimler"; }
+
+<style>
+.bildirim-wrap { max-width: 700px; margin: 0 auto; padding: 28px 5%; }
+.bildirim-baslik { font-size: 22px; font-weight: 800; margin-bottom: 20px; }
+.bildirim-item { display: flex; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; transition: background .15s; }
+.bildirim-item.okunmamis { border-left: 3px solid var(--primary); background: #eff6ff; }
+[data-theme="dark"] .bildirim-item.okunmamis { background: #1e3a5f; }
+.bildirim-ikon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.bildirim-icerik { flex: 1; }
+.bildirim-mesaj { font-size: 14px; margin-bottom: 4px; line-height: 1.5; }
+.bildirim-tarih { font-size: 12px; color: var(--muted); }
+.bos { text-align: center; padding: 60px 20px; color: var(--muted); }
+.bos-icon { font-size: 48px; margin-bottom: 12px; }
+</style>
+
+<div class="bildirim-wrap">
+    <div class="bildirim-baslik">🔔 Bildirimler</div>
+
+    @if (!Model.Any())
+    {
+        <div class="bos">
+            <div class="bos-icon">🔔</div>
+            <div style="font-size:17px;font-weight:700;margin-bottom:6px;">Bildirim yok</div>
+            <div>Henüz hiç bildirim almadınız.</div>
+        </div>
+    }
+
+    @foreach (var b in Model)
+    {
+        <div class="bildirim-item @(!b.Okundu ? "okunmamis" : "")">
+            <div class="bildirim-ikon">
+                @(b.Tip == "YORUM" ? "💬" : b.Tip == "REZERVASYON" ? "📅" : b.Tip == "KAMPANYA" ? "🎁" : "📢")
+            </div>
+            <div class="bildirim-icerik">
+                <div class="bildirim-mesaj">
+                    @b.Mesaj
+                    @if (!string.IsNullOrEmpty(b.Link))
+                    {
+                        <a href="@b.Link" style="color:var(--primary);font-size:12px;margin-left:6px;">görüntüle →</a>
+                    }
+                </div>
+                <div class="bildirim-tarih">@b.Olusturuldu.ToString("dd MMM yyyy HH:mm")</div>
+            </div>
+            @if (!b.Okundu)
+            {
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:6px;"></div>
+            }
+        </div>
+    }
+</div>

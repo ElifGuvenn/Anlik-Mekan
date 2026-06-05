@@ -1,0 +1,366 @@
+@model AnlikMekanCore.Models.ViewModels.DashboardViewModel
+@{ ViewData["Title"] = "Mekanlar"; ViewData["NavHome"] = true; }
+
+@{
+    var f = Model.Filtre;
+    bool herhangiAktif = !string.IsNullOrEmpty(f.Sehir) || !string.IsNullOrEmpty(f.Kategori) ||
+        !string.IsNullOrEmpty(f.Acik) || !string.IsNullOrEmpty(f.Wifi) || !string.IsNullOrEmpty(f.Priz) ||
+        !string.IsNullOrEmpty(f.Bahce) || !string.IsNullOrEmpty(f.Pet) || !string.IsNullOrEmpty(f.Engelli) ||
+        !string.IsNullOrEmpty(f.Muzik) || !string.IsNullOrEmpty(f.Cocuk) || !string.IsNullOrEmpty(f.Siralama);
+
+    string SehirAdi(string k) => k switch { "istanbul" => "İstanbul", "izmir" => "İzmir", "samsun" => "Samsun", "sakarya" => "Sakarya", "balikesir" => "Balıkesir", _ => k };
+    string KatAdi(string k) => k switch { "KAFE" => "Kafe", "RESTORAN" => "Restoran", "KUTUPHANE" => "Kütüphane", "ECZANE" => "Eczane", "PUB" => "Pub", _ => k };
+    string PaginationUrl(int s) => Url.Action("Dashboard","Home", new { sayfa=s, Sehir=f.Sehir, Kategori=f.Kategori, Acik=f.Acik, Wifi=f.Wifi, Priz=f.Priz, Bahce=f.Bahce, Pet=f.Pet, Engelli=f.Engelli, Muzik=f.Muzik, Cocuk=f.Cocuk, Siralama=f.Siralama, Lat=f.Lat, Lng=f.Lng })!;
+}
+
+<style>
+.page-wrap { max-width: 1400px; margin: 0 auto; padding: 24px 24px 80px; }
+.filtre-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 24px; }
+.filtre-form { display: flex; flex-direction: column; gap: 14px; }
+.filtre-satir { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.filtre-baslik { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; min-width: 70px; flex-shrink: 0; }
+.filtre-select { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); color: var(--text); background: var(--surface); cursor: pointer; font-family: inherit; outline: none; min-width: 170px; max-width: 220px; }
+.filtre-select:focus { border-color: var(--primary); }
+.ozellik-grid { display: flex; flex-wrap: wrap; gap: 10px 24px; }
+.ozellik-cb { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; user-select: none; white-space: nowrap; }
+.ozellik-cb input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+.ozellik-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1.5px solid var(--border); color: var(--muted); background: var(--surface); cursor: pointer; transition: all .15s; white-space: nowrap; user-select: none; }
+.ozellik-chip input[type=checkbox] { display: none; }
+.ozellik-chip:has(input:checked) { background: #0f172a; color: white; border-color: #0f172a; }
+.sort-select { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1.5px solid var(--border); color: var(--text); background: var(--surface); cursor: pointer; font-family: inherit; outline: none; }
+.filtre-ozet { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 0 0; border-top: 1px solid var(--border); margin-top: 4px; }
+.filtre-ozet-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.aktif-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #0f172a; color: white; }
+.aktif-chip button { background: none; border: none; color: rgba(255,255,255,.75); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 2px; }
+.aktif-chip button:hover { color: white; }
+.temizle-btn { font-size: 12px; font-weight: 600; color: #dc2626; text-decoration: none; padding: 3px 8px; border-radius: 6px; transition: background .15s; }
+.temizle-btn:hover { background: #fef2f2; }
+.sayfa-ust { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.sayfa-ust h1 { font-size: 20px; font-weight: 800; letter-spacing: -.3px; }
+.sayfa-ust span { font-size: 13px; color: var(--muted); }
+.venue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.venue-card { background: var(--surface); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; transition: box-shadow .25s, transform .25s; cursor: pointer; position: relative; }
+.venue-card:hover { box-shadow: 0 20px 60px rgba(0,0,0,.12); transform: translateY(-4px); }
+.venue-img-wrap { position: relative; }
+.venue-img-wrap img { width: 100%; height: 185px; object-fit: cover; display: block; }
+.venue-img-ph { width: 100%; height: 185px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+.status-pill { position: absolute; top: 10px; left: 10px; padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.s-open  { background: rgba(16,185,129,.15); color: #059669; border: 1px solid rgba(16,185,129,.3); }
+.s-close { background: rgba(100,116,139,.12); color: #64748b; border: 1px solid rgba(100,116,139,.2); }
+.fav-form { position: absolute; top: 10px; right: 10px; }
+.fav-btn { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.92); display: flex; align-items: center; justify-content: center; font-size: 15px; border: 1px solid rgba(0,0,0,.06); cursor: pointer; transition: .15s; }
+.fav-btn:hover { background: white; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+.venue-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; }
+.venue-cat { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.mesafe-badge { font-size: 11px; color: var(--primary); font-weight: 600; margin-bottom: 4px; }
+.venue-name { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 3px; letter-spacing: -.2px; text-decoration: none; transition: color .15s; display: block; }
+.venue-name:hover { color: var(--primary); }
+.venue-rating { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.stars-row { color: #f59e0b; font-size: 12px; }
+.star-e { color: #e5e7eb; }
+.rating-val { font-size: 12px; font-weight: 700; }
+.rating-cnt { font-size: 11px; color: var(--muted); }
+.venue-address { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+.doluluk-wrap { margin-bottom: 10px; }
+.doluluk-row { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 3px; }
+.doluluk-track { height: 3px; background: #e5e7eb; border-radius: 2px; }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+.tag { padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+.venue-footer { display: flex; gap: 8px; margin-top: auto; }
+.btn-map { flex: 1; background: linear-gradient(135deg, var(--primary), #7c3aed); color: white; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700; text-align: center; transition: opacity .15s; text-decoration: none; display: block; }
+.btn-map:hover { opacity: .9; color: white; }
+.btn-detail { padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; background: var(--bg); color: var(--text); border: 1px solid var(--border); transition: .15s; text-decoration: none; }
+.btn-detail:hover { background: #e2e8f0; }
+.empty-state { grid-column: 1/-1; text-align: center; padding: 80px 20px; color: var(--muted); }
+.empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.pagination-wrap { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 48px; flex-wrap: wrap; }
+.page-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; padding: 0 10px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); transition: .15s; text-decoration: none; }
+.page-btn:hover { border-color: var(--primary); color: var(--primary); }
+.page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.page-btn.disabled { opacity: .4; pointer-events: none; }
+@@media (max-width: 600px) {
+    .venue-grid { grid-template-columns: 1fr; }
+    .filtre-baslik { min-width: 100%; }
+}
+</style>
+
+<div class="page-wrap">
+
+<form method="get" action="@Url.Action("Dashboard","Home")" class="filtre-panel" id="filtre-form">
+    <div class="filtre-form">
+
+        <div class="filtre-satir">
+            <span class="filtre-baslik">Şehir</span>
+            <select name="Sehir" class="filtre-select" onchange="this.form.submit()">
+                <option value="">Tüm Şehirler</option>
+                <option value="istanbul" selected="@(f.Sehir=="istanbul")">İstanbul</option>
+                <option value="izmir"    selected="@(f.Sehir=="izmir")">İzmir</option>
+                <option value="samsun"   selected="@(f.Sehir=="samsun")">Samsun</option>
+                <option value="sakarya"  selected="@(f.Sehir=="sakarya")">Sakarya</option>
+                <option value="balikesir" selected="@(f.Sehir=="balikesir")">Balıkesir</option>
+            </select>
+            <span class="filtre-baslik" style="margin-left:8px;">Kategori</span>
+            <select name="Kategori" class="filtre-select" onchange="this.form.submit()">
+                <option value="">Tüm Kategoriler</option>
+                <option value="KAFE"      selected="@(f.Kategori=="KAFE")">Kafe</option>
+                <option value="RESTORAN"  selected="@(f.Kategori=="RESTORAN")">Restoran</option>
+                <option value="KUTUPHANE" selected="@(f.Kategori=="KUTUPHANE")">Kütüphane</option>
+                <option value="ECZANE"    selected="@(f.Kategori=="ECZANE")">Eczane</option>
+                <option value="PUB"       selected="@(f.Kategori=="PUB")">Pub</option>
+            </select>
+        </div>
+
+        <div class="filtre-satir">
+            <span class="filtre-baslik">Durum</span>
+            <label class="ozellik-chip">
+                <input type="checkbox" name="Acik" value="1" checked="@(!string.IsNullOrEmpty(f.Acik))" onchange="this.form.submit()">
+                <span style="color:#16a34a">●</span> Şu An Açık
+            </label>
+            <span style="margin-left:12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Sırala</span>
+            <select name="Siralama" class="sort-select" id="siralama-sel">
+                <option value=""           selected="@(string.IsNullOrEmpty(f.Siralama))">Varsayılan</option>
+                <option value="mesafe"     selected="@(f.Siralama=="mesafe")">📍 Yakınımdakiler</option>
+                <option value="puan"       selected="@(f.Siralama=="puan")">En Yüksek Puan</option>
+                <option value="doluluk_az" selected="@(f.Siralama=="doluluk_az")">En Az Dolu</option>
+                <option value="doluluk_cok" selected="@(f.Siralama=="doluluk_cok")">En Çok Dolu</option>
+                <option value="isim_az"    selected="@(f.Siralama=="isim_az")">İsim A - Z</option>
+                <option value="isim_za"    selected="@(f.Siralama=="isim_za")">İsim Z - A</option>
+            </select>
+            <input type="hidden" name="Lat" id="filtre-lat" value="@f.Lat">
+            <input type="hidden" name="Lng" id="filtre-lng" value="@f.Lng">
+        </div>
+
+        <div class="filtre-satir">
+            <span class="filtre-baslik">Özellikler</span>
+            <div class="ozellik-grid">
+                <label class="ozellik-cb"><input type="checkbox" name="Wifi"    value="1" checked="@(!string.IsNullOrEmpty(f.Wifi))"    onchange="this.form.submit()"> 📶 Wi-Fi</label>
+                <label class="ozellik-cb"><input type="checkbox" name="Priz"    value="1" checked="@(!string.IsNullOrEmpty(f.Priz))"    onchange="this.form.submit()"> 🔌 Priz</label>
+                <label class="ozellik-cb"><input type="checkbox" name="Bahce"   value="1" checked="@(!string.IsNullOrEmpty(f.Bahce))"   onchange="this.form.submit()"> 🌿 Bahçe</label>
+                <label class="ozellik-cb"><input type="checkbox" name="Pet"     value="1" checked="@(!string.IsNullOrEmpty(f.Pet))"     onchange="this.form.submit()"> 🐾 Pet Dostu</label>
+                <label class="ozellik-cb"><input type="checkbox" name="Engelli" value="1" checked="@(!string.IsNullOrEmpty(f.Engelli))" onchange="this.form.submit()"> ♿ Engelli Erişimi</label>
+                <label class="ozellik-cb"><input type="checkbox" name="Muzik"   value="1" checked="@(!string.IsNullOrEmpty(f.Muzik))"   onchange="this.form.submit()"> 🎵 Canlı Müzik</label>
+                <label class="ozellik-cb"><input type="checkbox" name="Cocuk"   value="1" checked="@(!string.IsNullOrEmpty(f.Cocuk))"   onchange="this.form.submit()"> 👶 Çocuk Alanı</label>
+            </div>
+        </div>
+
+        @if (herhangiAktif)
+        {
+            <div class="filtre-ozet">
+                <span class="filtre-ozet-label">Aktif:</span>
+                @if (!string.IsNullOrEmpty(f.Sehir))
+                { <span class="aktif-chip">@SehirAdi(f.Sehir) <button type="button" onclick="clearSel('Sehir')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Kategori))
+                { <span class="aktif-chip">@KatAdi(f.Kategori) <button type="button" onclick="clearSel('Kategori')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Acik))
+                { <span class="aktif-chip">Şu An Açık <button type="button" onclick="clearChk('Acik')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Wifi))
+                { <span class="aktif-chip">Wi-Fi <button type="button" onclick="clearChk('Wifi')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Priz))
+                { <span class="aktif-chip">Priz <button type="button" onclick="clearChk('Priz')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Bahce))
+                { <span class="aktif-chip">Bahçe <button type="button" onclick="clearChk('Bahce')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Pet))
+                { <span class="aktif-chip">Pet Dostu <button type="button" onclick="clearChk('Pet')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Engelli))
+                { <span class="aktif-chip">Engelli Erişimi <button type="button" onclick="clearChk('Engelli')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Muzik))
+                { <span class="aktif-chip">Canlı Müzik <button type="button" onclick="clearChk('Muzik')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Cocuk))
+                { <span class="aktif-chip">Çocuk Alanı <button type="button" onclick="clearChk('Cocuk')">×</button></span> }
+                @if (!string.IsNullOrEmpty(f.Siralama))
+                { <span class="aktif-chip">Sıralı <button type="button" onclick="clearSel('Siralama')">×</button></span> }
+                <a href="@Url.Action("Dashboard","Home")" class="temizle-btn">Tümünü Temizle</a>
+            </div>
+        }
+    </div>
+</form>
+
+<div class="sayfa-ust">
+    <h1>
+        @if (!string.IsNullOrEmpty(f.Sehir)) { <text>@SehirAdi(f.Sehir) · </text> }
+        @if (!string.IsNullOrEmpty(f.Kategori)) { <text>@KatAdi(f.Kategori) · </text> }
+        Mekanlar
+    </h1>
+    <span>@Model.ToplamSonuc mekan bulundu</span>
+</div>
+
+<div class="venue-grid">
+    @if (!Model.Mekanlar.Any())
+    {
+        <div class="empty-state">
+            <h3>Sonuç bulunamadı</h3>
+            <p>Filtrelerinizle eşleşen mekan yok.
+                <a href="@Url.Action("Dashboard","Home")" style="color:var(--primary);font-weight:700;">Filtreleri temizle</a>
+            </p>
+        </div>
+    }
+    @foreach (var m in Model.Mekanlar)
+    {
+        <article class="venue-card" onclick="kartaTikla(event,'@Url.Action("Detay","Mekan",new{id=m.Id})')" role="button">
+            <div class="venue-img-wrap">
+                @if (!string.IsNullOrEmpty(m.ImgUrl))
+                { <img src="@m.ImgUrl" alt="@m.Ad" loading="lazy"> }
+                else
+                {
+                    <div class="venue-img-ph">
+                        @(m.Kategori=="KAFE"?"☕":m.Kategori=="RESTORAN"?"🍽️":m.Kategori=="KUTUPHANE"?"📚":m.Kategori=="ECZANE"?"💊":"🍺")
+                    </div>
+                }
+                @if (m.AcikMi)
+                { <span class="status-pill s-open">Açık</span> }
+                else
+                { <span class="status-pill s-close">Kapalı</span> }
+
+                <form method="post" action="@Url.Action("FavoriIslem","Home")" class="fav-form" onclick="event.stopPropagation()">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="mekanId" value="@m.Id">
+                    <button type="submit" class="fav-btn" title="Favori">
+                        @(Model.FavoriMekanIds.Contains(m.Id) ? "❤️" : "🤍")
+                    </button>
+                </form>
+            </div>
+            <div class="venue-body">
+                <div class="venue-cat">@m.KategoriAdi</div>
+                @if (!string.IsNullOrEmpty(m.MesafeYazi))
+                { <div class="mesafe-badge">📍 @m.MesafeYazi</div> }
+                <a href="@Url.Action("Detay","Mekan",new{id=m.Id})" class="venue-name" onclick="event.stopPropagation()">@m.Ad</a>
+                @if (m.OrtPuan.HasValue)
+                {
+                    <div class="venue-rating">
+                        <span class="stars-row">
+                            @for (int s = 1; s <= 5; s++)
+                            {
+                                if (s <= (int)Math.Round(m.OrtPuan.Value))
+                                { <text>★</text> }
+                                else
+                                { <span class="star-e">★</span> }
+                            }
+                        </span>
+                        <span class="rating-val">@m.OrtPuan.Value.ToString("F1")</span>
+                        <span class="rating-cnt">(@m.YorumSayisi)</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(m.Adres))
+                {
+                    <div class="venue-address">@(m.Adres.Length > 52 ? m.Adres[..52] + "…" : m.Adres)</div>
+                }
+                @if (m.DolulukOrani.HasValue && m.DolulukOrani > 0)
+                {
+                    var renk = m.DolulukOrani > 80 ? "#dc2626" : m.DolulukOrani > 50 ? "#d97706" : "#059669";
+                    <div class="doluluk-wrap">
+                        <div class="doluluk-row"><span>Doluluk</span><span>%@m.DolulukOrani</span></div>
+                        <div class="doluluk-track">
+                            <div style="width:@(m.DolulukOrani)%;height:100%;border-radius:2px;background:@renk;"></div>
+                        </div>
+                    </div>
+                }
+                <div class="tags">
+                    @if (m.CalismaAlaniVar || m.Kategori=="KUTUPHANE")
+                    { <span class="tag" style="background:#f5f3ff;color:#6d28d9;">Çalışma Alanı</span> }
+                    @if (m.WifiVar)
+                    { <span class="tag" style="background:#eff6ff;color:#1d4ed8;">Wi-Fi</span> }
+                    @if (m.PrizVar)
+                    { <span class="tag" style="background:#f0fdf4;color:#15803d;">Priz</span> }
+                    @if (m.OtoparkVar)
+                    { <span class="tag" style="background:#fff7ed;color:#c2410c;">Otopark</span> }
+                    @if (m.BahceVar)
+                    { <span class="tag" style="background:#f0fdf4;color:#15803d;">Bahçe</span> }
+                    @if (m.CanliMuzikVar)
+                    { <span class="tag" style="background:#fefce8;color:#a16207;">Canlı Müzik</span> }
+                    @if (m.EvcilHayvanIzinli)
+                    { <span class="tag" style="background:#fdf4ff;color:#7e22ce;">Pet Dostu</span> }
+                    @if (m.EngelliErizimiVar)
+                    { <span class="tag" style="background:#f5f3ff;color:#6d28d9;">Engelli</span> }
+                    @if (m.SigaraIcinUygun)
+                    { <span class="tag" style="background:#f8fafc;color:#475569;">Sigara</span> }
+                    @if (m.CocukOyunAlaniVar)
+                    { <span class="tag" style="background:#eff6ff;color:#1d4ed8;">Çocuk</span> }
+                </div>
+                <div class="venue-footer">
+                    <a href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(m.Ad + " " + m.Adres)"
+                       target="_blank" class="btn-map" onclick="event.stopPropagation()">🗺️ Yol Tarifi</a>
+                    <a href="@Url.Action("Detay","Mekan",new{id=m.Id})" class="btn-detail" onclick="event.stopPropagation()">Detay →</a>
+                </div>
+            </div>
+        </article>
+    }
+</div>
+
+@if (Model.SayfaSayisi > 1)
+{
+    <div class="pagination-wrap">
+        @if (Model.MevcutSayfa > 1)
+        { <a href="@PaginationUrl(Model.MevcutSayfa-1)" class="page-btn">←</a> }
+        else
+        { <span class="page-btn disabled">←</span> }
+
+        @for (int i = 1; i <= Model.SayfaSayisi; i++)
+        {
+            if (i == Model.MevcutSayfa)
+            { <span class="page-btn active">@i</span> }
+            else if (i == 1 || i == Model.SayfaSayisi || Math.Abs(i - Model.MevcutSayfa) <= 2)
+            { <a href="@PaginationUrl(i)" class="page-btn">@i</a> }
+            else if (Math.Abs(i - Model.MevcutSayfa) == 3)
+            { <span style="padding:0 4px;color:var(--muted)">…</span> }
+        }
+
+        @if (Model.MevcutSayfa < Model.SayfaSayisi)
+        { <a href="@PaginationUrl(Model.MevcutSayfa+1)" class="page-btn">→</a> }
+        else
+        { <span class="page-btn disabled">→</span> }
+    </div>
+}
+
+</div>
+
+<script>
+function clearChk(name) {
+    const cb = document.querySelector('input[name="' + name + '"]');
+    if (cb) cb.checked = false;
+    document.getElementById('filtre-form').submit();
+}
+function clearSel(name) {
+    const sel = document.querySelector('select[name="' + name + '"]') || document.getElementById('siralama-sel');
+    const el = document.querySelector('[name="' + name + '"]');
+    if (el) el.value = '';
+    if (name === 'Siralama') {
+        document.getElementById('filtre-lat').value = '';
+        document.getElementById('filtre-lng').value = '';
+    }
+    document.getElementById('filtre-form').submit();
+}
+function kartaTikla(e, url) {
+    if (e.target.closest('a,button,form')) return;
+    window.location = url;
+}
+
+document.getElementById('siralama-sel').addEventListener('change', function () {
+    if (this.value !== 'mesafe') { this.form.submit(); return; }
+    const konum = JSON.parse(sessionStorage.getItem('user_konum') || 'null');
+    if (konum) {
+        document.getElementById('filtre-lat').value = konum.lat;
+        document.getElementById('filtre-lng').value = konum.lng;
+        this.form.submit();
+        return;
+    }
+    if (!navigator.geolocation) {
+        this.value = '';
+        alert('Tarayıcınız konum desteklemiyor.');
+        return;
+    }
+    const sel = this;
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            const k = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            sessionStorage.setItem('user_konum', JSON.stringify(k));
+            document.getElementById('filtre-lat').value = k.lat;
+            document.getElementById('filtre-lng').value = k.lng;
+            sel.form.submit();
+        },
+        () => {
+            sel.value = '';
+            alert('Konum alınamadı. Lütfen tarayıcı izinlerini kontrol edin.');
+        }
+    );
+});
+</script>

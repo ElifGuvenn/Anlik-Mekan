@@ -1,0 +1,48 @@
+@model AnlikMekanCore.Models.ViewModels.TotpDogrulaViewModel
+@{ ViewData["Title"] = "2FA Kurulumu"; }
+
+<style>
+.auth-wrap { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; width: 100%; max-width: 440px; text-align: center; }
+.auth-icon { font-size: 48px; margin-bottom: 16px; }
+.auth-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.auth-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+.qr-img { border-radius: 12px; border: 2px solid var(--border); padding: 8px; background: white; margin: 0 auto 20px; display: block; max-width: 220px; }
+.secret-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 14px; letter-spacing: 2px; margin-bottom: 24px; word-break: break-all; }
+.otp-input { width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 24px; text-align: center; letter-spacing: 8px; font-family: monospace; background: var(--bg); color: var(--text); margin-bottom: 16px; }
+.otp-input:focus { outline: none; border-color: var(--primary); }
+.btn-full { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.steps { text-align: left; margin-bottom: 24px; }
+.step { display: flex; gap: 12px; margin-bottom: 12px; font-size: 14px; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+</style>
+
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="auth-icon">🔐</div>
+        <div class="auth-title">2FA Kurulumu</div>
+        <div class="auth-sub">Hesabınızı güvende tutmak için Google Authenticator veya benzeri bir uygulama ile 2 adımlı doğrulama kurun.</div>
+
+        <div class="steps">
+            <div class="step"><div class="step-num">1</div><div>Google Authenticator veya Authy uygulamasını telefonunuza indirin.</div></div>
+            <div class="step"><div class="step-num">2</div><div>Uygulamada <strong>"+"</strong> tuşuna basın, <strong>"QR kodu tara"</strong> seçin.</div></div>
+            <div class="step"><div class="step-num">3</div><div>Aşağıdaki QR kodu tarayın veya anahtarı manuel girin.</div></div>
+            <div class="step"><div class="step-num">4</div><div>Uygulamadaki 6 haneli kodu aşağıya yazın.</div></div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ViewBag.QrBase64?.ToString()))
+        {
+            <img src="data:image/png;base64,@ViewBag.QrBase64" class="qr-img" alt="QR Kod">
+        }
+
+        <div class="auth-sub" style="margin-bottom:8px;">Manuel giriş için anahtar:</div>
+        <div class="secret-box">@ViewBag.SecretKey</div>
+
+        <form asp-action="QrKodDogrula" asp-controller="Auth" method="post">
+            @Html.AntiForgeryToken()
+            <input name="TotpCode" class="otp-input" type="text" inputmode="numeric"
+                   maxlength="6" placeholder="000000" autocomplete="one-time-code" required>
+            <button type="submit" class="btn-full">Doğrula ve Devam Et</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,22 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## SQLite veritabanı (her çalıştırmada EnsureCreated ile otomatik oluşur)
+*.db
+*.db-shm
+*.db-wal
+
+## Kullanıcı sırları / ortam değişkenleri
+appsettings.Development.json
+secrets.json
+
+## Yüklenen dosyalar
+wwwroot/uploads/
+
+## OS
+.DS_Store
+Thumbs.db

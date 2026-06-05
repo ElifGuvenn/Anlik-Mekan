@@ -1,0 +1,59 @@
+@model AnlikMekanCore.Models.ViewModels.LoginViewModel
+@{ ViewData["Title"] = "Giriş Yap"; Layout = "_Layout"; }
+
+<style>
+.auth-wrap { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
+.auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+             padding: 40px; width: 100%; max-width: 420px; box-shadow: var(--shadow-md); }
+.auth-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.auth-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.form-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+              font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); }
+.form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.btn-primary { width: 100%; padding: 11px; background: var(--primary); color: white; border: none;
+               border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.btn-primary:hover { background: var(--primary-dark); }
+.auth-alt { text-align: center; margin-top: 18px; font-size: 13px; color: var(--muted); }
+.auth-alt a { color: var(--primary); font-weight: 600; }
+.error-list { background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 8px;
+              font-size: 13px; margin-bottom: 16px; }
+</style>
+
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="auth-title">Hoş geldiniz</div>
+        <div class="auth-sub">Hesabınıza giriş yapın</div>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="error-list">
+                @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div>@err.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <form asp-action="Login" asp-controller="Auth" method="post">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label class="form-label" asp-for="KullaniciAdi">Kullanıcı Adı</label>
+                <input class="form-input" asp-for="KullaniciAdi" placeholder="kullanici_adi">
+            </div>
+            <div class="form-group">
+                <label class="form-label" asp-for="Sifre">Şifre</label>
+                <input class="form-input" asp-for="Sifre" type="password" placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-primary">Giriş Yap</button>
+        </form>
+
+        <div class="auth-alt">
+            Hesabınız yok mu? <a href="@Url.Action("Register","Auth")">Üye Ol</a>
+        </div>
+        <div class="auth-alt" style="margin-top:8px;">
+            <a href="@Url.Action("SifreSifirla","Auth")">Şifremi Unuttum</a>
+        </div>
+    </div>
+</div>

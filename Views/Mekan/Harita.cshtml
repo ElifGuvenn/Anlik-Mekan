@@ -1,0 +1,153 @@
+@model List<AnlikMekanCore.Models.Entities.Mekan>
+@{ ViewData["Title"] = "Harita"; ViewData["NavHarita"] = true; }
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+.harita-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 60px); }
+@@media(max-width:768px){.harita-layout{grid-template-columns:1fr;height:auto;}}
+.harita-sidebar { border-right: 1px solid var(--border); overflow-y: auto; background: var(--surface); }
+.harita-filtre { padding: 14px; border-bottom: 1px solid var(--border); }
+.harita-filtre select { width: 100%; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; margin-bottom: 8px; background: var(--bg); color: var(--text); }
+.harita-chip-grup { display: flex; flex-wrap: wrap; gap: 6px; }
+.harita-chip { padding: 4px 10px; border: 1.5px solid var(--border); border-radius: 16px; font-size: 11px; font-weight: 600; cursor: pointer; background: var(--bg); color: var(--muted); text-decoration: none; white-space: nowrap; }
+.harita-chip.aktif { background: var(--primary); color: white; border-color: var(--primary); }
+.harita-info { padding: 10px 14px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); }
+.mekan-liste-item { padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+.mekan-liste-item:hover { background: var(--bg); }
+.item-ad { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.item-adres { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.item-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.mini-badge { padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.mb-acik { background:#d1fae5;color:#065f46; } .mb-kapali { background:#fee2e2;color:#991b1b; }
+.mb-dol { background:#fef3c7;color:#92400e; } .mb-puan { background:#eff6ff;color:#1d4ed8; }
+.mb-mesafe { background:#f0fdf4;color:#166534; }
+#harita { height: calc(100vh - 60px); }
+@@media(max-width:768px){#harita{height:400px;}}
+.konum-btn { width: 100%; padding: 8px; background: var(--primary); color: white; border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+</style>
+
+<div class="harita-layout">
+    <div class="harita-sidebar">
+        <form method="get" id="harita-form">
+            <div class="harita-filtre">
+                <button type="button" class="konum-btn" id="konum-btn">📍 Konumuma Göre Sırala</button>
+                <input type="hidden" name="lat" id="lat-inp" value="@ViewBag.UserLat">
+                <input type="hidden" name="lng" id="lng-inp" value="@ViewBag.UserLng">
+                <select name="sehir" onchange="this.form.submit()">
+                    <option value="">Tüm Şehirler</option>
+                    <option value="istanbul" selected="@(Context.Request.Query["sehir"]=="istanbul")">İstanbul</option>
+                    <option value="izmir" selected="@(Context.Request.Query["sehir"]=="izmir")">İzmir</option>
+                    <option value="samsun" selected="@(Context.Request.Query["sehir"]=="samsun")">Samsun</option>
+                    <option value="sakarya" selected="@(Context.Request.Query["sehir"]=="sakarya")">Sakarya</option>
+                    <option value="balikesir" selected="@(Context.Request.Query["sehir"]=="balikesir")">Balıkesir</option>
+                </select>
+                <select name="kategori" onchange="this.form.submit()">
+                    <option value="">Tüm Kategoriler</option>
+                    <option value="KAFE" selected="@(Context.Request.Query["kategori"]=="KAFE")">Kafe</option>
+                    <option value="RESTORAN" selected="@(Context.Request.Query["kategori"]=="RESTORAN")">Restoran</option>
+                    <option value="KUTUPHANE" selected="@(Context.Request.Query["kategori"]=="KUTUPHANE")">Kütüphane</option>
+                    <option value="ECZANE" selected="@(Context.Request.Query["kategori"]=="ECZANE")">Eczane</option>
+                    <option value="PUB" selected="@(Context.Request.Query["kategori"]=="PUB")">Pub</option>
+                </select>
+                <div class="harita-chip-grup">
+                    <a href="?acik=1&sehir=@Context.Request.Query["sehir"]&kategori=@Context.Request.Query["kategori"]"
+                       class="harita-chip @(!string.IsNullOrEmpty(Context.Request.Query["acik"]) ? "aktif" : "")">Açık</a>
+                    <a href="?wifi=1&sehir=@Context.Request.Query["sehir"]&kategori=@Context.Request.Query["kategori"]"
+                       class="harita-chip @(!string.IsNullOrEmpty(Context.Request.Query["wifi"]) ? "aktif" : "")">WiFi</a>
+                    <a href="?priz=1&sehir=@Context.Request.Query["sehir"]&kategori=@Context.Request.Query["kategori"]"
+                       class="harita-chip @(!string.IsNullOrEmpty(Context.Request.Query["priz"]) ? "aktif" : "")">Priz</a>
+                    <a href="?bahce=1&sehir=@Context.Request.Query["sehir"]&kategori=@Context.Request.Query["kategori"]"
+                       class="harita-chip @(!string.IsNullOrEmpty(Context.Request.Query["bahce"]) ? "aktif" : "")">Bahçe</a>
+                </div>
+            </div>
+        </form>
+
+        <div class="harita-info">
+            @ViewBag.HaritadaMekan konumlu / @ViewBag.ToplamMekan toplam mekan
+            @if ((bool)ViewBag.AktifKonum) { <strong> — konuma göre sıralı</strong> }
+        </div>
+
+        <div id="sidebar-liste">
+            @{
+                var veriler = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(
+                    ViewBag.HaritaVerisiJson as string ?? "[]");
+            }
+            @foreach (var item in veriler ?? new())
+            {
+                var mekanId = item.GetProperty("id").GetInt32();
+                var ad = item.GetProperty("ad").GetString() ?? "";
+                var adres = item.GetProperty("adres").GetString() ?? "";
+                var acik = item.GetProperty("suAnAcik").GetBoolean();
+                var kat = item.GetProperty("kategoriDisplay").GetString() ?? "";
+                <div class="mekan-liste-item" onclick="odaklan(@mekanId)" data-id="@mekanId">
+                    <div class="item-ad">@ad</div>
+                    <div class="item-adres">@kat @(!string.IsNullOrEmpty(adres) ? "· " + adres.Substring(0, Math.Min(adres.Length,40)) : "")</div>
+                    <div class="item-badges">
+                        @if (acik) { <span class="mini-badge mb-acik">Açık</span> }
+                        else { <span class="mini-badge mb-kapali">Kapalı</span> }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div id="harita"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var haritaVerisi = @Html.Raw(ViewBag.HaritaVerisiJson);
+var markers = {};
+
+var katIkon = {
+    'KAFE':'☕','RESTORAN':'🍽️','KUTUPHANE':'📚','ECZANE':'💊','PUB':'🍺'
+};
+
+function ikonHtml(k, acik) {
+    return '<div style="background:'+(acik?'#10b981':'#ef4444')+';color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)">' + (katIkon[k]||'📍') + '</div>';
+}
+
+var map = L.map('harita').setView([39.9, 32.8], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+haritaVerisi.forEach(function(m) {
+    if (!m.lat || !m.lng) return;
+    var ikon = L.divIcon({ html: ikonHtml(m.kategori, m.suAnAcik), iconSize:[30,30], className:'' });
+    var popup = '<div style="min-width:180px"><strong>'+m.ad+'</strong><br>'
+        +'<small>'+m.kategoriDisplay+'</small><br>'
+        +(m.ortPuan?'★ '+m.ortPuan.toFixed(1)+' · ':'')
+        +(m.yorumSayisi?m.yorumSayisi+' yorum<br>':'')
+        +(m.dolulukOrani!==null?'Doluluk: %'+m.dolulukOrani+'<br>':'')
+        +(m.suAnAcik?'<span style="color:#10b981">Açık</span>':'<span style="color:#ef4444">Kapalı</span>')
+        +'<br><a href="'+m.detayUrl+'" style="color:#6366f1">Detaya git →</a></div>';
+    var marker = L.marker([m.lat, m.lng], {icon: ikon}).addTo(map).bindPopup(popup);
+    markers[m.id] = marker;
+});
+
+function odaklan(id) {
+    var m = markers[id];
+    if (m) { map.setView(m.getLatLng(), 16); m.openPopup(); }
+}
+
+@if ((bool)ViewBag.AktifKonum && !string.IsNullOrEmpty(ViewBag.UserLat?.ToString()))
+{
+    @Html.Raw($@"
+    var userLat={ViewBag.UserLat};
+    var userLng={ViewBag.UserLng};
+    L.circleMarker([userLat,userLng],{{radius:10,color:'#6366f1',fillColor:'#6366f1',fillOpacity:0.8}}).addTo(map).bindPopup('📍 Konumunuz');
+    map.setView([userLat,userLng],13);
+    ")
+}
+
+document.getElementById('konum-btn').addEventListener('click', function() {
+    if (!navigator.geolocation) { alert('Konum desteklenmiyor'); return; }
+    this.textContent = '...';
+    navigator.geolocation.getCurrentPosition(function(pos) {
+        document.getElementById('lat-inp').value = pos.coords.latitude;
+        document.getElementById('lng-inp').value = pos.coords.longitude;
+        document.getElementById('harita-form').submit();
+    }, function() { alert('Konum alınamadı.'); });
+});
+</script>

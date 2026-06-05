@@ -1,0 +1,60 @@
+@model List<AnlikMekanCore.Models.Entities.Mekan>
+@{ ViewData["Title"] = "Admin Paneli"; Layout = "_Layout"; }
+
+<style>
+.admin-wrap { max-width: 900px; margin: 0 auto; padding: 32px 5%; }
+.admin-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; }
+.mekan-kart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.kart-bilgi { flex: 1; min-width: 200px; }
+.kart-ad { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.kart-meta { font-size: 13px; color: var(--muted); }
+.kart-aksiyonlar { display: flex; gap: 8px; }
+.btn-onayla { padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 13px; }
+.btn-reddet { padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 13px; }
+.bos { text-align: center; padding: 60px; color: var(--muted); }
+.bos-icon { font-size: 48px; margin-bottom: 12px; }
+</style>
+
+<div class="admin-wrap">
+    <div class="admin-title">🛡️ Admin Paneli — Onay Bekleyen Mekanlar (@Model.Count)</div>
+
+    @if (!Model.Any())
+    {
+        <div class="bos">
+            <div class="bos-icon">✅</div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Onay bekleyen mekan yok</div>
+            <div>Tüm mekanlar onaylandı.</div>
+        </div>
+    }
+
+    @foreach (var m in Model)
+    {
+        <div class="mekan-kart">
+            @if (!string.IsNullOrEmpty(m.ImgUrl))
+            {
+                <img src="@m.ImgUrl" style="width:80px;height:70px;object-fit:cover;border-radius:8px;flex-shrink:0;">
+            }
+            <div class="kart-bilgi">
+                <div class="kart-ad">@m.Ad</div>
+                <div class="kart-meta">@m.KategoriAdi · @m.Sehir · @m.Adres</div>
+                <div class="kart-meta" style="margin-top:4px;">
+                    Sahip: @(m.SahibiId ?? "—")
+                </div>
+            </div>
+            <div class="kart-aksiyonlar">
+                <a href="@Url.Action("Detay","Mekan", new {id=m.Id})" style="padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;">Önizle</a>
+                <form asp-action="Onayla" asp-controller="Admin" method="post" style="display:inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="mekanId" value="@m.Id">
+                    <button type="submit" class="btn-onayla">✓ Onayla</button>
+                </form>
+                <form asp-action="Reddet" asp-controller="Admin" method="post" style="display:inline"
+                      onsubmit="return confirm('Bu mekanı reddetmek istiyor musunuz?')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="mekanId" value="@m.Id">
+                    <button type="submit" class="btn-reddet">✕ Reddet</button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,129 @@
+@model AnlikMekanCore.Models.ViewModels.MekanFormModel
+@{ ViewData["Title"] = "Mekan Ekle"; }
+
+<style>
+.form-wrap { max-width: 680px; margin: 0 auto; padding: 32px 5%; }
+.form-title { font-size: 24px; font-weight: 800; margin-bottom: 28px; }
+.form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+.section-baslik { font-size: 14px; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.form-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text); box-sizing: border-box; }
+.form-input:focus { outline: none; border-color: var(--primary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ozellik-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.ozellik-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer; }
+.ozellik-item:has(input:checked) { border-color: var(--primary); background: #eff6ff; }
+.ozellik-item input { margin: 0; accent-color: var(--primary); }
+.btn-full { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+</style>
+
+<div class="form-wrap">
+    <div class="form-title">🏠 Yeni Mekan Ekle</div>
+
+    <form asp-action="MekanOlustur" asp-controller="Owner" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <div class="form-section">
+            <div class="section-baslik">Temel Bilgiler</div>
+            <div class="form-group">
+                <label class="form-label">Mekan Adı *</label>
+                <input asp-for="Ad" class="form-input" placeholder="Örn: Keyif Kafe">
+                <span asp-validation-for="Ad" style="color:#ef4444;font-size:12px;"></span>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Kategori *</label>
+                    <select asp-for="Kategori" class="form-input">
+                        <option value="">Seçin</option>
+                        <option value="KAFE">Kafe</option>
+                        <option value="RESTORAN">Restoran</option>
+                        <option value="KUTUPHANE">Kütüphane</option>
+                        <option value="ECZANE">Eczane</option>
+                        <option value="PUB">Pub</option>
+                    </select>
+                    <span asp-validation-for="Kategori" style="color:#ef4444;font-size:12px;"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Şehir *</label>
+                    <select asp-for="Sehir" class="form-input">
+                        <option value="">Seçin</option>
+                        <option value="istanbul">İstanbul</option>
+                        <option value="izmir">İzmir</option>
+                        <option value="samsun">Samsun</option>
+                        <option value="sakarya">Sakarya</option>
+                        <option value="balikesir">Balıkesir</option>
+                    </select>
+                    <span asp-validation-for="Sehir" style="color:#ef4444;font-size:12px;"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adres *</label>
+                <input asp-for="Adres" class="form-input" placeholder="Mahalle, sokak, kapı no…">
+                <span asp-validation-for="Adres" style="color:#ef4444;font-size:12px;"></span>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Telefon</label>
+                    <input asp-for="Telefon" class="form-input" placeholder="0555 555 55 55">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Web Sitesi</label>
+                    <input asp-for="Website" class="form-input" placeholder="https://…">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-baslik">Konum (GPS)</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Enlem (Latitude)</label>
+                    <input asp-for="Latitude" class="form-input" step="any" placeholder="Örn: 41.0082">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Boylam (Longitude)</label>
+                    <input asp-for="Longitude" class="form-input" step="any" placeholder="Örn: 28.9784">
+                </div>
+            </div>
+            <button type="button" class="btn-sm" onclick="konumAl()" style="margin-top:4px;">
+                📍 Mevcut Konumumu Kullan
+            </button>
+        </div>
+
+        <div class="form-section">
+            <div class="section-baslik">Fotoğraf</div>
+            <input asp-for="Img" type="file" class="form-input" accept="image/*" style="padding:8px;">
+        </div>
+
+        <div class="form-section">
+            <div class="section-baslik">Özellikler</div>
+            <div class="ozellik-grid">
+                <label class="ozellik-item"><input asp-for="WifiVar" type="checkbox"> 📶 WiFi</label>
+                <label class="ozellik-item"><input asp-for="PrizVar" type="checkbox"> 🔌 Priz</label>
+                <label class="ozellik-item"><input asp-for="BahceVar" type="checkbox"> 🌿 Bahçe</label>
+                <label class="ozellik-item"><input asp-for="OtoparkVar" type="checkbox"> 🅿 Otopark</label>
+                <label class="ozellik-item"><input asp-for="CalismaAlaniVar" type="checkbox"> 💻 Çalışma Alanı</label>
+                <label class="ozellik-item"><input asp-for="EngelliErizimiVar" type="checkbox"> ♿ Engelli Erişimi</label>
+                <label class="ozellik-item"><input asp-for="EvcilHayvanIzinli" type="checkbox"> 🐾 Evcil Hayvan</label>
+                <label class="ozellik-item"><input asp-for="CanliMuzikVar" type="checkbox"> 🎵 Canlı Müzik</label>
+                <label class="ozellik-item"><input asp-for="SigaraIcinUygun" type="checkbox"> 🚬 Sigara</label>
+                <label class="ozellik-item"><input asp-for="CocukOyunAlaniVar" type="checkbox"> 🧒 Çocuk Alanı</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-full">Mekan Ekle — Onaya Gönder</button>
+    </form>
+</div>
+
+<script>
+function konumAl() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function(p) {
+        document.getElementById('Latitude').value = p.coords.latitude.toFixed(6);
+        document.getElementById('Longitude').value = p.coords.longitude.toFixed(6);
+    });
+}
+</script>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

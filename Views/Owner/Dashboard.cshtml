@@ -1,0 +1,226 @@
+@model List<AnlikMekanCore.Models.Entities.Mekan>
+@{ ViewData["Title"] = "Mekan Sahibi Paneli"; }
+
+<style>
+.owner-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 5%; }
+.owner-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.page-title { font-size: 24px; font-weight: 800; }
+.mekan-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 28px; overflow: hidden; }
+.mp-head { display: flex; align-items: center; gap: 16px; padding: 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+.mp-img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+.mp-ad { font-size: 18px; font-weight: 800; }
+.mp-meta { font-size: 13px; color: var(--muted); }
+.mp-durum-badge { padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 700; }
+.mp-onaylandi { background:#d1fae5;color:#065f46; } .mp-bekliyor { background:#fef3c7;color:#92400e; }
+.mp-aksiyonlar { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-sm { padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); text-decoration: none; font-family: inherit; }
+.btn-sm:hover { background: var(--surface); }
+.btn-sm-danger { border-color: #fca5a5; background: #fff5f5; color: #dc2626; }
+.mp-body { padding: 20px; }
+.kontrol-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.kontrol-kart { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.kontrol-baslik { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.doluluk-slider { width: 100%; accent-color: var(--primary); }
+.toggle-btn { display: flex; align-items: center; gap: 8px; }
+.toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--border); border-radius: 24px; transition: .3s; }
+.toggle-slider:before { content:''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s; }
+.toggle input:checked + .toggle-slider { background: var(--primary); }
+.toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+.rez-tablo { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rez-tablo th { font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 8px; text-align: left; border-bottom: 2px solid var(--border); }
+.rez-tablo td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+.rez-durum { padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+.rd-bekleniyor{background:#fef9c3;color:#854d0e;} .rd-onaylandi{background:#d1fae5;color:#065f46;} .rd-reddedildi{background:#fee2e2;color:#991b1b;}
+.kampanya-form { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.f-input { width: 100%; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 7px; font-family: inherit; font-size: 13px; background: var(--surface); color: var(--text); box-sizing: border-box; }
+.f-input:focus { outline: none; border-color: var(--primary); }
+</style>
+
+<div class="owner-wrap">
+    <div class="owner-header">
+        <div class="page-title">🏠 Mekan Yönetimi</div>
+        <a href="@Url.Action("MekanOlustur","Owner")" class="btn btn-primary">+ Yeni Mekan Ekle</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div style="text-align:center;padding:60px;color:var(--muted);">
+            <div style="font-size:48px;margin-bottom:12px;">🏗️</div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Henüz mekanınız yok</div>
+            <a href="@Url.Action("MekanOlustur","Owner")" class="btn btn-primary">İlk mekanı ekle</a>
+        </div>
+    }
+
+    @foreach (var m in Model)
+    {
+        <div class="mekan-panel">
+            <div class="mp-head">
+                <div class="mp-img">
+                    @if (!string.IsNullOrEmpty(m.ImgUrl)) { <img src="@m.ImgUrl" style="width:100%;height:100%;object-fit:cover;border-radius:10px;"> }
+                    else { <span>@(m.Kategori == "KAFE" ? "☕" : "📍")</span> }
+                </div>
+                <div>
+                    <div class="mp-ad">@m.Ad</div>
+                    <div class="mp-meta">@m.KategoriAdi · @m.Sehir</div>
+                    <div style="margin-top:4px;">
+                        <span class="mp-durum-badge @(m.IsApproved ? "mp-onaylandi" : "mp-bekliyor")">
+                            @(m.IsApproved ? "✓ Yayında" : "⏳ Onay bekliyor")
+                        </span>
+                    </div>
+                </div>
+                <div class="mp-aksiyonlar">
+                    <a href="@Url.Action("Detay","Mekan", new {id=m.Id})" class="btn-sm">Görüntüle</a>
+                    <a href="@Url.Action("MekanDuzenle","Owner", new {id=m.Id})" class="btn-sm">Düzenle</a>
+                    <a href="@Url.Action("CalismaSaatleri","Owner", new {mekanId=m.Id})" class="btn-sm">Saatler</a>
+                    <form asp-action="MekanSil" asp-controller="Owner" asp-route-id="@m.Id" method="post"
+                          onsubmit="return confirm('Bu mekanı silmek istediğinizden emin misiniz?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-sm btn-sm-danger">Sil</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mp-body">
+                <div class="kontrol-grid">
+                    <div class="kontrol-kart">
+                        <div class="kontrol-baslik">Açık / Kapalı</div>
+                        <div class="toggle-btn">
+                            <label class="toggle">
+                                <input type="checkbox" id="acik-@m.Id" @(m.SuAnAcik ? "checked" : "")
+                                       onchange="durumGuncelle(@m.Id,'su_an_acik',this.checked?'true':'false')">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span id="acik-lbl-@m.Id" style="font-size:13px;font-weight:600;">@(m.SuAnAcik ? "Açık" : "Kapalı")</span>
+                        </div>
+                    </div>
+                    <div class="kontrol-kart">
+                        <div class="kontrol-baslik">Doluluk Oranı: <span id="dol-val-@m.Id">%@(m.DolulukOrani ?? 0)</span></div>
+                        <input type="range" min="0" max="100" value="@(m.DolulukOrani ?? 0)" class="doluluk-slider"
+                               oninput="document.getElementById('dol-val-@m.Id').textContent='%'+this.value"
+                               onchange="durumGuncelle(@m.Id,'doluluk_orani',this.value)">
+                    </div>
+                    <div class="kontrol-kart">
+                        <div class="kontrol-baslik">Anlık Duyuru</div>
+                        <input type="text" class="f-input" placeholder="Duyuru yazın…" value="@m.AnlikDuyuru"
+                               onblur="durumGuncelle(@m.Id,'anlik_duyuru',this.value)">
+                    </div>
+                    <div class="kontrol-kart">
+                        <div class="kontrol-baslik">Rezervasyon</div>
+                        <form asp-action="RezervasyonToggle" asp-controller="Owner" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="mekanId" value="@m.Id">
+                            <button type="submit" class="btn-sm @(m.RezervasyonAktif ? "" : "")">
+                                @(m.RezervasyonAktif ? "🟢 Rezervasyon Açık — kapat" : "🔴 Rezervasyon Kapalı — aç")
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                @{
+                    var bekleyenRezler = m.Rezervasyonlar.Where(r => r.Durum == "BEKLIYOR").ToList();
+                    var tumRezler = m.Rezervasyonlar.OrderByDescending(r => r.Tarih).Take(10).ToList();
+                }
+                @if (tumRezler.Any())
+                {
+                    <div style="margin-bottom:20px;">
+                        <div style="font-size:14px;font-weight:700;margin-bottom:12px;">
+                            Rezervasyonlar
+                            @if (bekleyenRezler.Any()) { <span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:5px;font-size:11px;">@bekleyenRezler.Count bekliyor</span> }
+                        </div>
+                        <table class="rez-tablo">
+                            <tr><th>Kişi</th><th>Tarih</th><th>Kişi Sayısı</th><th>Durum</th><th>İşlem</th></tr>
+                            @foreach (var r in tumRezler)
+                            {
+                                <tr>
+                                    <td>@(r.Kullanici?.UserName ?? "—")</td>
+                                    <td>@r.Tarih.ToString("dd MMM yyyy HH:mm")</td>
+                                    <td>@r.KisiSayisi kişi</td>
+                                    <td><span class="rez-durum rd-@r.Durum.ToLower()">@r.Durum</span></td>
+                                    <td>
+                                        @if (r.Durum == "BEKLIYOR")
+                                        {
+                                            <form asp-action="RezervasyonGuncelle" asp-controller="Owner" method="post" style="display:inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="rezervasyonId" value="@r.Id">
+                                                <button name="durum" value="ONAYLANDI" class="btn-sm" style="margin-right:4px;">✓</button>
+                                                <button name="durum" value="REDDEDILDI" class="btn-sm btn-sm-danger">✕</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                }
+
+                <div>
+                    <div style="font-size:14px;font-weight:700;margin-bottom:12px;">Kampanya Ekle</div>
+                    <form asp-action="KampanyaOlustur" asp-controller="Owner" method="post" enctype="multipart/form-data" class="kampanya-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="mekanId" value="@m.Id">
+                        <div class="form-row">
+                            <input name="baslik" class="f-input" placeholder="Kampanya başlığı" required>
+                            <input type="file" name="foto" accept="image/*" class="f-input" style="padding:5px;">
+                        </div>
+                        <textarea name="aciklama" class="f-input" rows="2" placeholder="Kampanya açıklaması" style="margin-bottom:12px;"></textarea>
+                        <div class="form-row">
+                            <div>
+                                <div style="font-size:12px;margin-bottom:4px;">Başlangıç</div>
+                                <input type="datetime-local" name="baslangic" class="f-input" required>
+                            </div>
+                            <div>
+                                <div style="font-size:12px;margin-bottom:4px;">Bitiş</div>
+                                <input type="datetime-local" name="bitis" class="f-input" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%;">Kampanya Oluştur</button>
+                    </form>
+
+                    @{var aktifKamp = m.Kampanyalar.Where(k => k.Bitis >= DateTime.UtcNow).ToList();}
+                    @if (aktifKamp.Any())
+                    {
+                        <div style="margin-top:12px;">
+                            @foreach (var k in aktifKamp)
+                            {
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+                                    <div><strong>@k.Baslik</strong> — @k.Bitis.ToString("dd MMM")</div>
+                                    <form asp-action="KampanyaSil" asp-controller="Owner" method="post" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="kampanyaId" value="@k.Id">
+                                        <button type="submit" class="btn-sm btn-sm-danger">Sil</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+var csrfToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+function durumGuncelle(mekanId, alan, deger) {
+    fetch('/Owner/DurumGuncelle', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'RequestVerificationToken': csrfToken
+        },
+        body: new URLSearchParams({ id: mekanId, alan, deger })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (alan === 'su_an_acik') {
+            var lbl = document.getElementById('acik-lbl-' + mekanId);
+            if (lbl) lbl.textContent = data.deger ? 'Açık' : 'Kapalı';
+        }
+    })
+    .catch(() => alert('Güncelleme başarısız'));
+}
+</script>

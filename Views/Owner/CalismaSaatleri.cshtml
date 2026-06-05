@@ -1,0 +1,64 @@
+@model AnlikMekanCore.Models.Entities.Mekan
+@{ ViewData["Title"] = "Çalışma Saatleri"; }
+
+<style>
+.form-wrap { max-width: 560px; margin: 0 auto; padding: 32px 5%; }
+.form-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.form-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+.gun-satir { display: grid; grid-template-columns: 80px auto 1fr 1fr; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.gun-ad { font-size: 14px; font-weight: 600; }
+.toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--border); border-radius: 22px; transition: .2s; }
+.toggle-slider:before { content:''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .2s; }
+.toggle input:checked + .toggle-slider { background: var(--primary); }
+.toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
+.time-input { padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 7px; font-family: inherit; font-size: 13px; background: var(--bg); color: var(--text); width: 100%; box-sizing: border-box; }
+.time-input:focus { outline: none; border-color: var(--primary); }
+.time-input:disabled { opacity: .4; }
+.btn-full { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 20px; }
+</style>
+
+<div class="form-wrap">
+    <div class="form-title">🕐 Çalışma Saatleri</div>
+    <div class="form-sub">@Model.Ad</div>
+
+    <form asp-action="CalismaSaatleri" asp-controller="Owner" asp-route-mekanId="@Model.Id" method="post">
+        @Html.AntiForgeryToken()
+
+        @{
+            var gunAdlari = new[] { "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar" };
+        }
+
+        @for (int g = 0; g < 7; g++)
+        {
+            var gun = Model.CalismaGunleri.FirstOrDefault(cg => cg.Gun == g);
+            var acik = gun?.Acik ?? false;
+            var acilis = gun?.Acilis?.ToString("HH:mm") ?? "";
+            var kapanis = gun?.Kapanis?.ToString("HH:mm") ?? "";
+            var cbId = $"gun_{g}_acik";
+
+            <div class="gun-satir">
+                <div class="gun-ad">@gunAdlari[g]</div>
+                <label class="toggle">
+                    <input type="checkbox" name="@cbId" id="@cbId" @(acik ? "checked" : "")
+                           onchange="toggleGun(@g, this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <input type="time" name="gun_@(g)_acilis" id="acilis-@g" value="@acilis"
+                       class="time-input" @(!acik ? "disabled" : "")>
+                <input type="time" name="gun_@(g)_kapanis" id="kapanis-@g" value="@kapanis"
+                       class="time-input" @(!acik ? "disabled" : "")>
+            </div>
+        }
+
+        <button type="submit" class="btn-full">Saatleri Kaydet</button>
+    </form>
+</div>
+
+<script>
+function toggleGun(g, acik) {
+    document.getElementById('acilis-'+g).disabled = !acik;
+    document.getElementById('kapanis-'+g).disabled = !acik;
+}
+</script>

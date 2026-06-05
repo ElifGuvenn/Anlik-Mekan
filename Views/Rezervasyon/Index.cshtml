@@ -1,0 +1,67 @@
+@model List<AnlikMekanCore.Models.Entities.Rezervasyon>
+@{ ViewData["Title"] = "Rezervasyonlarım"; }
+
+<style>
+.rez-wrap { max-width: 800px; margin: 0 auto; padding: 28px 5%; }
+.page-baslik { font-size: 22px; font-weight: 800; margin-bottom: 20px; }
+.rez-kart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.rez-bilgi { flex: 1; min-width: 200px; }
+.rez-mekan { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.rez-meta { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.rez-durum { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+.d-bekliyor { background:#fef9c3;color:#854d0e; }
+.d-onaylandi { background:#d1fae5;color:#065f46; }
+.d-reddedildi { background:#fee2e2;color:#991b1b; }
+.d-iptal { background:#f1f5f9;color:#64748b; }
+.bos { text-align: center; padding: 60px 20px; color: var(--muted); }
+.bos-icon { font-size: 48px; margin-bottom: 12px; }
+.btn-iptal { padding: 6px 14px; background: #fff5f5; border: 1.5px solid #fca5a5; border-radius: 7px; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; font-family: inherit; }
+</style>
+
+<div class="rez-wrap">
+    <div class="page-baslik">📅 Rezervasyonlarım</div>
+
+    @if (!Model.Any())
+    {
+        <div class="bos">
+            <div class="bos-icon">📅</div>
+            <div style="font-size:17px;font-weight:700;margin-bottom:6px;">Rezervasyon yok</div>
+            <div>Mekan detay sayfasından rezervasyon yapabilirsiniz.</div>
+            <a href="@Url.Action("Dashboard","Home")" class="btn btn-primary" style="margin-top:16px;display:inline-block;">Mekanları Keşfet</a>
+        </div>
+    }
+
+    @foreach (var r in Model)
+    {
+        <div class="rez-kart">
+            <div style="font-size:28px;">📅</div>
+            <div class="rez-bilgi">
+                <div class="rez-mekan">
+                    <a href="@Url.Action("Detay","Mekan", new {id=r.MekanId})" style="color:var(--text);">
+                        @(r.Mekan?.Ad ?? "Mekan")
+                    </a>
+                </div>
+                <div class="rez-meta">
+                    @r.Tarih.ToString("dd MMM yyyy") — @r.Saat.ToString("HH:mm")
+                    · @r.KisiSayisi kişi
+                </div>
+                @if (!string.IsNullOrEmpty(r.NotMesaj))
+                {
+                    <div style="font-size:13px;margin-top:4px;color:var(--muted);">Not: @r.NotMesaj</div>
+                }
+                <div style="margin-top:8px;">
+                    <span class="rez-durum d-@r.Durum.ToLower()">@r.Durum</span>
+                </div>
+            </div>
+            @if (r.Durum == "BEKLIYOR")
+            {
+                <form asp-action="Iptal" asp-controller="Rezervasyon" method="post"
+                      onsubmit="return confirm('Rezervasyonu iptal etmek istiyor musunuz?')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@r.Id">
+                    <button type="submit" class="btn-iptal">İptal Et</button>
+                </form>
+            }
+        </div>
+    }
+</div>

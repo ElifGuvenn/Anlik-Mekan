@@ -1,0 +1,57 @@
+@{ ViewData["Title"] = "Veri İçe Aktarma"; Layout = null; }
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Veri Aktarma — Anlık Mekan</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.wrap { background: white; border-radius: 16px; padding: 40px; max-width: 540px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+.logo { font-size: 22px; font-weight: 900; color: #6366f1; margin-bottom: 32px; }
+h1 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+.desc { font-size: 14px; color: #64748b; margin-bottom: 28px; line-height: 1.6; }
+.info-box { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 16px; margin-bottom: 24px; }
+.info-box ul { list-style: none; padding: 0; }
+.info-box li { font-size: 13px; color: #0369a1; padding: 3px 0; }
+.info-box li::before { content: "✓ "; font-weight: 700; }
+.btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
+.btn-primary { background: linear-gradient(135deg, #6366f1, #7c3aed); color: white; }
+.btn-primary:hover { opacity: .9; }
+.alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 600; }
+.alert-ok  { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.alert-err { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.back { display: inline-block; margin-top: 20px; font-size: 13px; color: #6366f1; text-decoration: none; font-weight: 600; }
+.back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="logo">📍 Anlık Mekan</div>
+    <h1>Veri İçe Aktarma</h1>
+    <p class="desc">Django projesindeki fixture JSON dosyasından (Data/initial_data.json) mekan verilerini veritabanına aktarır.</p>
+
+    @if (TempData["Mesaj"] != null)
+    { <div class="alert alert-ok">✓ @TempData["Mesaj"]</div> }
+    @if (TempData["Hata"] != null)
+    { <div class="alert alert-err">⚠ @TempData["Hata"]</div> }
+
+    <div class="info-box">
+        <ul>
+            <li>359 mekan (İstanbul, İzmir, Samsun, Sakarya, Balıkesir)</li>
+            <li>Kategoriler: Kafe, Restoran, Kütüphane, Eczane, Pub</li>
+            <li>Özellikler: Wi-Fi, Priz, Bahçe, Pet Dostu vb.</li>
+            <li>Zaten mevcut olanlar atlanır (Ad + Şehir kontrolü)</li>
+        </ul>
+    </div>
+
+    <form method="post" action="@Url.Action("Import","Admin")">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-primary">⬇ Fixture'dan İçe Aktar</button>
+    </form>
+
+    <a href="@Url.Action("Panel","Admin")" class="back">← Admin Paneline Dön</a>
+</div>
+</body>
+</html>

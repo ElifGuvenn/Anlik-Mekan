@@ -1,0 +1,302 @@
+@model AnlikMekanCore.Models.ViewModels.MekanDetayViewModel
+@using AnlikMekanCore.Models.Entities
+@{ ViewData["Title"] = Model.Mekan.Ad; }
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+.detay-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 5%; }
+.detay-hero { border-radius: 16px; overflow: hidden; margin-bottom: 24px; background: var(--surface); border: 1px solid var(--border); }
+.detay-hero-img { width: 100%; height: 320px; object-fit: cover; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 80px; }
+.detay-hero-img img { width: 100%; height: 100%; object-fit: cover; }
+.detay-hero-body { padding: 24px; }
+.detay-ad { font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
+.detay-meta { font-size: 14px; color: var(--muted); margin-bottom: 16px; display: flex; gap: 16px; flex-wrap: wrap; }
+.detay-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.badge-acik { background:#d1fae5;color:#065f46; } .badge-kapali { background:#fee2e2;color:#991b1b; }
+.badge-ozellik { background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+.detay-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+@@media(max-width:768px){.detay-grid{grid-template-columns:1fr;}}
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+.card-baslik { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.saatler-tablo { width: 100%; border-collapse: collapse; font-size: 13px; }
+.saatler-tablo td { padding: 6px 4px; border-bottom: 1px solid var(--border); }
+.saatler-tablo tr.bugun td { background: var(--bg); font-weight: 700; color: var(--primary); }
+.yorum-kart { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.yorum-kart:last-child { border-bottom: none; }
+.yorum-yazar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.yorum-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+.yorum-ad { font-weight: 600; font-size: 14px; }
+.yorum-tarih { font-size: 12px; color: var(--muted); }
+.yorum-puan { color: #f59e0b; font-size: 13px; margin-bottom: 6px; }
+.yorum-icerik { font-size: 14px; color: var(--text); line-height: 1.6; }
+.yorum-form { margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--border); }
+.yorum-form textarea { width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; background: var(--bg); color: var(--text); }
+.puan-secici { display: flex; gap: 6px; margin-bottom: 10px; }
+.puan-secici input[type=radio] { display: none; }
+.puan-secici label { font-size: 24px; cursor: pointer; opacity: .4; transition: opacity .15s; }
+.puan-secici label:hover, .puan-secici label.aktif { opacity: 1; }
+#harita-kucuk { height: 200px; border-radius: 10px; margin-bottom: 12px; }
+.kampanya-kart { background: linear-gradient(135deg,#fef3c7,#fff7ed); border: 1px solid #fcd34d; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.kampanya-baslik { font-weight: 700; font-size: 14px; color: #92400e; margin-bottom: 4px; }
+.kampanya-icerik { font-size: 13px; color: #78350f; }
+.kampanya-tarih { font-size: 11px; color: #a16207; margin-top: 4px; }
+.foto-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(90px,1fr)); gap: 6px; }
+.foto-grid img { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+.doluluk-bar-wrap { margin: 10px 0; }
+.doluluk-bar { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.doluluk-dolu { height: 100%; border-radius: 4px; background: linear-gradient(90deg,#10b981,#f59e0b,#ef4444); transition: width .3s; }
+</style>
+
+<div class="detay-wrap">
+    <div class="detay-hero">
+        <div class="detay-hero-img">
+            @if (!string.IsNullOrEmpty(Model.Mekan.ImgUrl))
+            { <img src="@Model.Mekan.ImgUrl" alt="@Model.Mekan.Ad"> }
+            else { <span>@(Model.Mekan.Kategori == "KAFE" ? "☕" : Model.Mekan.Kategori == "RESTORAN" ? "🍽️" : "📍")</span> }
+        </div>
+        <div class="detay-hero-body">
+            <div class="detay-ad">@Model.Mekan.Ad</div>
+            <div class="detay-meta">
+                <span>📍 @Model.Mekan.Adres</span>
+                @if (!string.IsNullOrEmpty(Model.Mekan.Telefon)) { <span>📞 @Model.Mekan.Telefon</span> }
+                @if (!string.IsNullOrEmpty(Model.Mekan.Website)) { <a href="@Model.Mekan.Website" target="_blank">🌐 Web sitesi</a> }
+                <span>👁 @Model.Mekan.GoruntulmeSayisi görüntülenme</span>
+            </div>
+            <div class="detay-badges">
+                @if (Model.Mekan.AcikMi) { <span class="badge badge-acik">✓ Şu an açık</span> }
+                else { <span class="badge badge-kapali">Şu an kapalı</span> }
+                @if (Model.Mekan.WifiVar) { <span class="badge badge-ozellik">📶 WiFi</span> }
+                @if (Model.Mekan.PrizVar) { <span class="badge badge-ozellik">🔌 Priz</span> }
+                @if (Model.Mekan.BahceVar) { <span class="badge badge-ozellik">🌿 Bahçe</span> }
+                @if (Model.Mekan.EvcilHayvanIzinli) { <span class="badge badge-ozellik">🐾 Evcil hayvan</span> }
+                @if (Model.Mekan.EngelliErizimiVar) { <span class="badge badge-ozellik">♿ Engelli erişimi</span> }
+                @if (Model.Mekan.CanliMuzikVar) { <span class="badge badge-ozellik">🎵 Canlı müzik</span> }
+                @if (Model.Mekan.OtoparkVar) { <span class="badge badge-ozellik">🅿 Otopark</span> }
+                @if (Model.Mekan.CalismaAlaniVar) { <span class="badge badge-ozellik">💻 Çalışma alanı</span> }
+            </div>
+            @if (Model.Mekan.DolulukOrani.HasValue)
+            {
+                <div class="doluluk-bar-wrap">
+                    <div style="font-size:13px;margin-bottom:4px;">Doluluk: <strong>%@Model.Mekan.DolulukOrani</strong></div>
+                    <div class="doluluk-bar"><div class="doluluk-dolu" style="width:@Model.Mekan.DolulukOrani%"></div></div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Mekan.AnlikDuyuru))
+            {
+                <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:14px;">
+                    📢 @Model.Mekan.AnlikDuyuru
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="detay-grid">
+        <div>
+            @if (Model.AktifKampanyalar.Any())
+            {
+                <div class="card">
+                    <div class="card-baslik">🎁 Aktif Kampanyalar</div>
+                    @foreach (var k in Model.AktifKampanyalar)
+                    {
+                        <div class="kampanya-kart">
+                            <div class="kampanya-baslik">@k.Baslik</div>
+                            <div class="kampanya-icerik">@k.Aciklama</div>
+                            <div class="kampanya-tarih">@k.Baslangic.ToString("dd MMM") – @k.Bitis.ToString("dd MMM yyyy")</div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (Model.Etkinlikler.Any())
+            {
+                <div class="card">
+                    <div class="card-baslik">📅 Yaklaşan Etkinlikler</div>
+                    @foreach (var e in Model.Etkinlikler)
+                    {
+                        <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+                            <div style="font-weight:700;font-size:14px;">@e.Baslik</div>
+                            <div style="font-size:12px;color:var(--muted);">@e.Baslangic.ToString("dd MMM yyyy HH:mm")</div>
+                            @if (!string.IsNullOrEmpty(e.Aciklama)) { <div style="font-size:13px;margin-top:4px;">@e.Aciklama</div> }
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-baslik">⭐ Yorumlar (@Model.Yorumlar.Count)</div>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="yorum-form">
+                        <form asp-action="YorumEkle" asp-controller="Mekan" asp-route-id="@Model.Mekan.Id"
+                              method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <div class="puan-secici" id="puan-secici">
+                                @for (int p = 1; p <= 5; p++)
+                                {
+                                    <input type="radio" name="Puan" id="p@(p)" value="@p">
+                                    <label for="p@(p)" id="lbl@(p)">★</label>
+                                }
+                            </div>
+                            <textarea name="Icerik" rows="3" placeholder="Yorumunuzu yazın..." required></textarea>
+                            <div style="margin-top:8px;">
+                                <input type="file" name="yorum_fotolar" accept="image/*" multiple style="font-size:12px;">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top:10px;width:100%;">Yorum Gönder</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <div style="text-align:center;padding:16px;background:var(--bg);border-radius:8px;margin-bottom:16px;">
+                        <a href="@Url.Action("Login","Auth")" style="color:var(--primary);font-weight:600;">Giriş yap</a> veya
+                        <a href="@Url.Action("Register","Auth")" style="color:var(--primary);font-weight:600;">kayıt ol</a> — yorum yapabilmek için.
+                    </div>
+                }
+
+                @foreach (var y in Model.Yorumlar)
+                {
+                    <div class="yorum-kart">
+                        <div class="yorum-yazar">
+                            <div class="yorum-avatar">@(y.Yazar?.UserName?.Substring(0,1).ToUpper() ?? "?")</div>
+                            <div>
+                                <div class="yorum-ad">@(y.Yazar?.UserName ?? "Anonim")</div>
+                                <div class="yorum-tarih">@y.Tarih.ToString("dd MMM yyyy")</div>
+                            </div>
+                        </div>
+                        <div class="yorum-puan">@string.Concat(Enumerable.Repeat("★", y.Puan ?? 0))@string.Concat(Enumerable.Repeat("☆", 5 - (y.Puan ?? 0)))</div>
+                        <div class="yorum-icerik">@y.Icerik</div>
+                        @if (y.Fotolar.Any())
+                        {
+                            <div class="foto-grid" style="margin-top:8px;">
+                                @foreach (var f in y.Fotolar) { <img src="@f.FotoUrl" alt="Yorum fotoğrafı"> }
+                            </div>
+                        }
+                        @if (y.Yanit != null)
+                        {
+                            <div style="margin-top:10px;padding:10px 14px;background:var(--bg);border-radius:8px;border-left:3px solid var(--primary);">
+                                <div style="font-size:12px;font-weight:700;margin-bottom:4px;">Mekan sahibi yanıtladı</div>
+                                <div style="font-size:13px;">@y.Yanit.Icerik</div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div>
+            @if (Model.Mekan.Latitude.HasValue && Model.Mekan.Longitude.HasValue)
+            {
+                <div class="card">
+                    <div class="card-baslik">🗺️ Konum</div>
+                    <div id="harita-kucuk"></div>
+                    <div style="font-size:13px;color:var(--muted);">@Model.Mekan.Adres</div>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-baslik">🕐 Çalışma Saatleri</div>
+                @{
+                    var gunAdlari = new[] { "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz" };
+                }
+                <table class="saatler-tablo">
+                    @for (int g = 0; g < 7; g++)
+                    {
+                        var gun = Model.Mekan.CalismaGunleri.FirstOrDefault(cg => cg.Gun == g);
+                        <tr class="@(g == Model.BugunNo ? "bugun" : "")">
+                            <td><strong>@gunAdlari[g]</strong></td>
+                            <td>
+                                @if (gun != null && gun.Acik)
+                                { @(gun.Acilis?.ToString("HH:mm") ?? "?") <text>–</text> @(gun.Kapanis?.ToString("HH:mm") ?? "?") }
+                                else { <span style="color:var(--muted)">Kapalı</span> }
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+
+            @if (Model.Fotolar.Any())
+            {
+                <div class="card">
+                    <div class="card-baslik">📸 Fotoğraflar</div>
+                    <div class="foto-grid">
+                        @foreach (var f in Model.Fotolar) { <img src="@f.FotoUrl" alt="Mekan fotoğrafı"> }
+                    </div>
+                </div>
+            }
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="card">
+                    <form asp-action="FavoriIslem" asp-controller="Home" method="post" style="margin-bottom:10px;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="mekanId" value="@Model.Mekan.Id">
+                        <button type="submit" style="width:100%;padding:9px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">
+                            ♥ Favorilere Ekle / Çıkar
+                        </button>
+                    </form>
+                    @if (Model.Mekan.RezervasyonAktif)
+                    {
+                        <div style="margin-top:4px;">
+                            <div style="font-size:13px;font-weight:700;margin-bottom:8px;">📅 Rezervasyon Yap</div>
+                            <form asp-action="Olustur" asp-controller="Rezervasyon" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="mekanId" value="@Model.Mekan.Id">
+                                <div style="margin-bottom:8px;">
+                                    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">Tarih</label>
+                                    <input type="date" name="tarih" required min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                           style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);">
+                                </div>
+                                <div style="margin-bottom:8px;">
+                                    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">Saat</label>
+                                    <input type="time" name="saat" required
+                                           style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);">
+                                </div>
+                                <div style="margin-bottom:8px;">
+                                    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">Kişi Sayısı</label>
+                                    <input type="number" name="kisiSayisi" value="1" min="1" max="20" required
+                                           style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);">
+                                </div>
+                                <div style="margin-bottom:10px;">
+                                    <label style="font-size:12px;font-weight:600;display:block;margin-bottom:3px;">Not (isteğe bağlı)</label>
+                                    <textarea name="notMesaj" rows="2" placeholder="Özel istek varsa yazın..."
+                                              style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);resize:vertical;"></textarea>
+                                </div>
+                                <button type="submit" style="width:100%;padding:10px;background:var(--primary);color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">
+                                    Rezervasyon Gönder
+                                </button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (Model.Mekan.Latitude.HasValue && Model.Mekan.Longitude.HasValue)
+{
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var lat = @Model.Mekan.Latitude.Value.ToString("F6", System.Globalization.CultureInfo.InvariantCulture);
+        var lng = @Model.Mekan.Longitude.Value.ToString("F6", System.Globalization.CultureInfo.InvariantCulture);
+        var map = L.map('harita-kucuk', { zoomControl: false }).setView([lat, lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([lat, lng]).addTo(map);
+    });
+    </script>
+}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var labels = document.querySelectorAll('.puan-secici label');
+    var radios = document.querySelectorAll('.puan-secici input[type=radio]');
+    labels.forEach(function (lbl, i) {
+        lbl.addEventListener('click', function () {
+            labels.forEach(function (l, j) { l.classList.toggle('aktif', j <= i); });
+        });
+    });
+});
+</script>

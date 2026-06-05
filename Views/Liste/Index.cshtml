@@ -1,0 +1,79 @@
+@model List<AnlikMekanCore.Models.Entities.MekanListesi>
+@{ ViewData["Title"] = "Listelerim"; }
+
+<style>
+.liste-wrap { max-width: 800px; margin: 0 auto; padding: 28px 5%; }
+.liste-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+.page-baslik { font-size: 22px; font-weight: 800; }
+.liste-kart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; display: flex; gap: 14px; align-items: center; }
+.liste-ikon { width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg,#6366f1,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.liste-bilgi { flex: 1; }
+.liste-ad { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.liste-meta { font-size: 12px; color: var(--muted); }
+.liste-badges { display: flex; gap: 6px; margin-top: 6px; }
+.mini-badge { padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; background:var(--bg); border:1px solid var(--border); color:var(--muted); }
+.liste-aksiyonlar { display: flex; gap: 8px; }
+.btn-sil { padding: 6px 12px; background: #fff5f5; border: 1.5px solid #fca5a5; border-radius: 7px; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; font-family: inherit; }
+.yeni-form { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+.yeni-form-baslik { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+.f-input { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text); box-sizing: border-box; margin-bottom: 10px; }
+.f-input:focus { outline: none; border-color: var(--primary); }
+.f-check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 12px; accent-color: var(--primary); }
+.bos { text-align: center; padding: 40px 20px; color: var(--muted); }
+</style>
+
+<div class="liste-wrap">
+    <div class="liste-header">
+        <div class="page-baslik">📋 Listelerim</div>
+    </div>
+
+    <div class="yeni-form">
+        <div class="yeni-form-baslik">+ Yeni Liste Oluştur</div>
+        <form asp-action="Olustur" asp-controller="Liste" method="post">
+            @Html.AntiForgeryToken()
+            <input name="ad" class="f-input" placeholder="Liste adı (Örn: Favori Kafelerim)" required>
+            <input name="aciklama" class="f-input" placeholder="Açıklama (opsiyonel)">
+            <label class="f-check">
+                <input type="checkbox" name="herkesAcik" value="true"> Herkese Açık
+            </label>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Oluştur</button>
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="bos">
+            <div style="font-size:40px;margin-bottom:10px;">📋</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Henüz liste yok</div>
+            <div>Favori mekanlarını listeler halinde düzenle.</div>
+        </div>
+    }
+
+    @foreach (var l in Model)
+    {
+        <div class="liste-kart">
+            <div class="liste-ikon">📋</div>
+            <div class="liste-bilgi">
+                <div class="liste-ad">
+                    <a href="@Url.Action("Detay","Liste", new {id=l.Id})" style="color:var(--text);">@l.Ad</a>
+                </div>
+                @if (!string.IsNullOrEmpty(l.Aciklama))
+                { <div class="liste-meta">@l.Aciklama</div> }
+                <div class="liste-badges">
+                    <span class="mini-badge">@l.Mekanlar.Count mekan</span>
+                    @if (l.HerkesAcik) { <span class="mini-badge">🌍 Herkese açık</span> }
+                    else { <span class="mini-badge">🔒 Gizli</span> }
+                </div>
+            </div>
+            <div class="liste-aksiyonlar">
+                <a href="@Url.Action("Detay","Liste", new {id=l.Id})" class="btn btn-outline" style="font-size:13px;padding:6px 12px;">Görüntüle</a>
+                <form asp-action="Sil" asp-controller="Liste" method="post"
+                      onsubmit="return confirm('Bu listeyi silmek istiyor musunuz?')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@l.Id">
+                    <button type="submit" class="btn-sil">Sil</button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

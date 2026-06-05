@@ -1,0 +1,41 @@
+@model AnlikMekanCore.Models.ViewModels.SifreSifirlaViewModel
+@{ ViewData["Title"] = "Şifremi Unuttum"; }
+
+<style>
+.auth-wrap { min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 36px; width: 100%; max-width: 400px; }
+.auth-icon { font-size: 40px; text-align: center; margin-bottom: 12px; }
+.auth-title { font-size: 22px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+.auth-sub { font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 28px; line-height: 1.6; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.form-input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 9px; font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text); box-sizing: border-box; }
+.form-input:focus { outline: none; border-color: var(--primary); }
+.btn-full { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 8px; }
+.back-link { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+.back-link a { color: var(--primary); font-weight: 600; }
+</style>
+
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="auth-icon">📧</div>
+        <div class="auth-title">Şifremi Unuttum</div>
+        <div class="auth-sub">Kayıtlı e-posta adresinizi girin. Size 6 haneli bir sıfırlama kodu göndereceğiz.</div>
+
+        <form asp-action="SifreSifirla" asp-controller="Auth" method="post">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label class="form-label">E-posta Adresi</label>
+                <input asp-for="Email" class="form-input" type="email" placeholder="ornek@mail.com" autofocus>
+                <span asp-validation-for="Email" style="color:#ef4444;font-size:12px;"></span>
+            </div>
+            <button type="submit" class="btn-full">Kod Gönder</button>
+        </form>
+
+        <div class="back-link">
+            <a href="@Url.Action("Login","Auth")">← Girişe dön</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

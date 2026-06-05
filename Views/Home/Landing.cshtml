@@ -1,0 +1,54 @@
+@{ ViewData["Title"] = "Anlık Mekan"; Layout = "_Layout"; }
+
+<style>
+.hero { min-height: 90vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 5%; background: linear-gradient(135deg, #f0f4ff 0%, #faf5ff 50%, #f0fdf4 100%); }
+[data-theme="dark"] .hero { background: linear-gradient(135deg, #0f172a, #1e1b4b); }
+.hero-badge { display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
+.hero-title { font-size: clamp(36px, 6vw, 64px); font-weight: 900; line-height: 1.1; letter-spacing: -2px; margin-bottom: 20px; }
+.hero-title span { background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-sub { font-size: 18px; color: var(--muted); max-width: 520px; margin: 0 auto 36px; }
+.hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.btn-hero-primary { padding: 14px 32px; background: var(--primary); color: white; border-radius: 10px; font-size: 16px; font-weight: 700; }
+.btn-hero-primary:hover { background: var(--primary-dark); }
+.btn-hero-outline { padding: 14px 32px; border: 2px solid var(--border); border-radius: 10px; font-size: 16px; font-weight: 600; color: var(--text); }
+.features { padding: 80px 5%; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
+.feature-kart { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+.feature-icon { font-size: 32px; margin-bottom: 14px; }
+.feature-baslik { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.feature-acik { font-size: 14px; color: var(--muted); line-height: 1.6; }
+</style>
+
+<div class="hero">
+    <div>
+        <div class="hero-badge">📍 Şehrin nabzı, anlık</div>
+        <h1 class="hero-title">Çevrendeki mekanları<br><span>anlık takip et</span></h1>
+        <p class="hero-sub">Kafeler, restoranlar, kütüphaneler ve daha fazlası — doluluk, saatler ve yorumlarla birlikte.</p>
+        <div class="hero-btns">
+            <a href="@Url.Action("Register","Auth")" class="btn-hero-primary">Ücretsiz Başla</a>
+            <a href="@Url.Action("Login","Auth")" class="btn-hero-outline">Giriş Yap</a>
+        </div>
+    </div>
+</div>
+
+<div class="features">
+    <div class="feature-kart">
+        <div class="feature-icon">🗺️</div>
+        <div class="feature-baslik">Harita Görünümü</div>
+        <div class="feature-acik">Tüm mekanları haritada gör, konumuna göre en yakını bul.</div>
+    </div>
+    <div class="feature-kart">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-baslik">Anlık Doluluk</div>
+        <div class="feature-acik">Mekan sahipleri doluluk oranını anlık güncelliyor.</div>
+    </div>
+    <div class="feature-kart">
+        <div class="feature-icon">⭐</div>
+        <div class="feature-baslik">Gerçek Yorumlar</div>
+        <div class="feature-acik">Kullanıcıların deneyimleri, puan ve fotoğraflarla.</div>
+    </div>
+    <div class="feature-kart">
+        <div class="feature-icon">📅</div>
+        <div class="feature-baslik">Rezervasyon</div>
+        <div class="feature-acik">Uygun mekanlara doğrudan uygulama üzerinden rezervasyon yap.</div>
+    </div>
+</div>

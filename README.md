@@ -19,13 +19,6 @@ Tarayıcıda: `http://localhost:5000`
 
 > Uygulama ilk çalıştığında veritabanını otomatik oluşturur.
 
-## İlk Kurulumda Veri Yükleme
-
-359 mekan verisini yüklemek için:
-
-1. `http://localhost:5000/Admin/Login` adresine git
-2. Kullanıcı adı: `Admin` / Şifre: `Admin1234!`
-3. **Import** sayfasına git → **Fixture'dan İçe Aktar** butonuna bas
 
 ## Kullanıcı Rolleri
 

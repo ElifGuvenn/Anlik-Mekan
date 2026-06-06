@@ -58,12 +58,47 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// SQLite kullanılıyorsa (lokal) DB otomatik oluştur
-if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
+// DB oluştur + fixture seed
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
+        db.Database.EnsureCreated();
+
+    if (!db.Mekanlar.Any())
+    {
+        var jsonPath = Path.Combine(app.Environment.ContentRootPath, "Data", "initial_data.json");
+        if (File.Exists(jsonPath))
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(jsonPath));
+            foreach (var item in doc.RootElement.EnumerateArray())
+            {
+                if (!item.TryGetProperty("model", out var m) || m.GetString() != "venues.mekan") continue;
+                if (!item.TryGetProperty("fields", out var f)) continue;
+                string? Str(string k) { if (!f.TryGetProperty(k, out var e)) return null; var s = e.GetString(); return string.IsNullOrWhiteSpace(s) ? null : s; }
+                bool Bool(string k) => f.TryGetProperty(k, out var e) && e.ValueKind == System.Text.Json.JsonValueKind.True;
+                decimal? Num(string k) { if (f.TryGetProperty(k, out var e) && e.ValueKind == System.Text.Json.JsonValueKind.Number) return (decimal)e.GetDouble(); return null; }
+                int? Int(string k) { if (f.TryGetProperty(k, out var e) && e.ValueKind == System.Text.Json.JsonValueKind.Number) return e.GetInt32(); return null; }
+
+                db.Mekanlar.Add(new AnlikMekanCore.Models.Entities.Mekan
+                {
+                    Ad = Str("ad") ?? "İsimsiz", Kategori = Str("kategori") ?? "KAFE",
+                    Sehir = Str("sehir") ?? "", Adres = Str("adres") ?? "",
+                    Telefon = Str("telefon"), Website = Str("website"),
+                    SuAnAcik = Bool("su_an_acik"), DolulukOrani = Int("doluluk_orani"),
+                    Latitude = Num("latitude"), Longitude = Num("longitude"),
+                    IsApproved = true,
+                    WifiVar = Bool("wifi_var"), PrizVar = Bool("priz_var"),
+                    OtoparkVar = Bool("otopark_var"), SigaraIcinUygun = Bool("sigara_icin_uygun"),
+                    BahceVar = Bool("bahce_var"), EngelliErizimiVar = Bool("engelli_erisimi_var"),
+                    CanliMuzikVar = Bool("canli_muzik_var"), EvcilHayvanIzinli = Bool("evcil_hayvan_izinli"),
+                    CocukOyunAlaniVar = Bool("cocuk_oyun_alani_var"), RezervasyonAktif = Bool("rezervasyon_aktif"),
+                    CalismaAlaniVar = Bool("calisma_alani_var"),
+                });
+            }
+            db.SaveChanges();
+        }
+    }
 }
 
 app.UseStaticFiles();

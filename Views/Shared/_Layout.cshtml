@@ -185,6 +185,7 @@
             <a href="@Url.Action("Index","Liste")" class="subnav-link">Listelerim</a>
             <a href="@Url.Action("Index","Rezervasyon")" class="subnav-link">Rezervasyonlarım</a>
             <a href="@Url.Action("PopulerMekanlar","Home")" class="subnav-link">Popüler</a>
+            <a href="@Url.Action("Takvim","Mekan")" class="subnav-link @(ViewData["NavTakvim"] != null ? "active" : "")"><span class="ic"><i data-lucide="calendar-days"></i></span> Etkinlikler</a>
         }
     </nav>
 }

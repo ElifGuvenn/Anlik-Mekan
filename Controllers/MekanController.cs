@@ -173,6 +173,45 @@ public class MekanController : Controller
         return View(mekanlar);
     }
 
+    // ── Etkinlik Takvimi ─────────────────────────────────────────────────────
+
+    [Authorize]
+    public async Task<IActionResult> Takvim(int? mekanId)
+    {
+        var etkinlikler = await _db.Etkinlikler
+            .Include(e => e.Mekan)
+            .Where(e => e.Bitis >= DateTime.UtcNow.AddMonths(-1))
+            .OrderBy(e => e.Baslangic)
+            .ToListAsync();
+
+        if (mekanId.HasValue)
+            etkinlikler = etkinlikler.Where(e => e.MekanId == mekanId.Value).ToList();
+
+        var mekanlar = await _db.Mekanlar
+            .Where(m => m.IsApproved)
+            .Select(m => new { m.Id, m.Ad })
+            .OrderBy(m => m.Ad)
+            .ToListAsync();
+
+        var etkinlikJson = etkinlikler.Select(e => new {
+            id = e.Id,
+            title = e.Baslik,
+            start = e.Baslangic.ToString("yyyy-MM-ddTHH:mm:ss"),
+            end = e.Bitis.ToString("yyyy-MM-ddTHH:mm:ss"),
+            mekanAd = e.Mekan.Ad,
+            mekanId = e.MekanId,
+            aciklama = e.Aciklama,
+            fotoUrl = e.FotoUrl,
+            detayUrl = Url.Action("Detay", "Mekan", new { id = e.MekanId }) ?? "",
+            color = e.Bitis < DateTime.UtcNow ? "#94a3b8" : "#2563eb"
+        }).ToList();
+
+        ViewBag.EtkinlikJson = JsonSerializer.Serialize(etkinlikJson, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        ViewBag.Mekanlar = mekanlar;
+        ViewBag.SecilenMekanId = mekanId;
+        return View();
+    }
+
     private static double HaversineM(double lat1, double lng1, double lat2, double lng2)
     {
         const double R = 6371000;

@@ -5,7 +5,7 @@
 <style>
 .harita-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 60px); }
 @@media(max-width:768px){.harita-layout{grid-template-columns:1fr;height:auto;}}
-.harita-sidebar { border-right: 1px solid var(--border); overflow-y: auto; background: var(--surface); }
+.harita-sidebar { border-right: 1px solid var(--border); overflow-y: auto; background: var(--surface); display:flex; flex-direction:column; }
 .harita-filtre { padding: 14px; border-bottom: 1px solid var(--border); }
 .harita-filtre select { width: 100%; padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; margin-bottom: 8px; background: var(--bg); color: var(--text); }
 .harita-chip-grup { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -19,71 +19,82 @@
 .item-badges { display: flex; gap: 6px; flex-wrap: wrap; }
 .mini-badge { padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; }
 .mb-acik { background:#d1fae5;color:#065f46; } .mb-kapali { background:#fee2e2;color:#991b1b; }
-.mb-dol { background:#fef3c7;color:#92400e; } .mb-puan { background:#eff6ff;color:#1d4ed8; }
-.mb-mesafe { background:#f0fdf4;color:#166534; }
-#harita { height: calc(100vh - 60px); }
-@@media(max-width:768px){#harita{height:400px;}}
-.konum-btn { width: 100%; padding: 8px; background: var(--primary); color: white; border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+#harita-map { height: calc(100vh - 60px); }
+@@media(max-width:768px){#harita-map{height:400px;}}
+.konum-btn { width: 100%; padding: 8px; background: var(--primary); color: white; border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 8px; display:flex; align-items:center; justify-content:center; gap:6px; }
+.kat-pin { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.3); }
 </style>
 
 <div class="harita-layout">
     <div class="harita-sidebar">
         <form method="get" id="harita-form">
             <div class="harita-filtre">
-                <button type="button" class="konum-btn" id="konum-btn">📍 Konumuma Göre Sırala</button>
+                <button type="button" class="konum-btn" id="konum-btn">
+                    <span class="ic"><i data-lucide="navigation"></i></span> Konumuma Göre Sırala
+                </button>
                 <input type="hidden" name="lat" id="lat-inp" value="@ViewBag.UserLat">
                 <input type="hidden" name="lng" id="lng-inp" value="@ViewBag.UserLng">
+                @{
+                    var qSehir = Context.Request.Query["sehir"].ToString();
+                    var qKategori = Context.Request.Query["kategori"].ToString();
+                }
                 <select name="sehir" onchange="this.form.submit()">
                     <option value="">Tüm Şehirler</option>
-                    <option value="istanbul" selected="@(Context.Request.Query["sehir"]=="istanbul")">İstanbul</option>
-                    <option value="izmir" selected="@(Context.Request.Query["sehir"]=="izmir")">İzmir</option>
-                    <option value="samsun" selected="@(Context.Request.Query["sehir"]=="samsun")">Samsun</option>
-                    <option value="sakarya" selected="@(Context.Request.Query["sehir"]=="sakarya")">Sakarya</option>
-                    <option value="balikesir" selected="@(Context.Request.Query["sehir"]=="balikesir")">Balıkesir</option>
+                    @foreach (var s in new[]{("istanbul","İstanbul"),("izmir","İzmir"),("samsun","Samsun"),("sakarya","Sakarya"),("balikesir","Balıkesir")})
+                    {
+                        if (qSehir == s.Item1) { <option value="@s.Item1" selected>@s.Item2</option> }
+                        else { <option value="@s.Item1">@s.Item2</option> }
+                    }
                 </select>
                 <select name="kategori" onchange="this.form.submit()">
                     <option value="">Tüm Kategoriler</option>
-                    <option value="KAFE" selected="@(Context.Request.Query["kategori"]=="KAFE")">Kafe</option>
-                    <option value="RESTORAN" selected="@(Context.Request.Query["kategori"]=="RESTORAN")">Restoran</option>
-                    <option value="KUTUPHANE" selected="@(Context.Request.Query["kategori"]=="KUTUPHANE")">Kütüphane</option>
-                    <option value="ECZANE" selected="@(Context.Request.Query["kategori"]=="ECZANE")">Eczane</option>
-                    <option value="PUB" selected="@(Context.Request.Query["kategori"]=="PUB")">Pub</option>
+                    @foreach (var k in new[]{("KAFE","Kafe"),("RESTORAN","Restoran"),("KUTUPHANE","Kütüphane"),("ECZANE","Eczane"),("PUB","Pub")})
+                    {
+                        if (qKategori == k.Item1) { <option value="@k.Item1" selected>@k.Item2</option> }
+                        else { <option value="@k.Item1">@k.Item2</option> }
+                    }
                 </select>
                 <div class="harita-chip-grup">
-                    <a href="?acik=1&sehir=@Context.Request.Query["sehir"]&kategori=@Context.Request.Query["kategori"]"
-                       class="harita-chip @(!string.IsNullOrEmpty(Context.Request.Query["acik"]) ? "aktif" : "")">Açık</a>
-                    <a href="?wifi=1&sehir=@Context.Request.Query["sehir"]&kategori=@Context.Request.Query["kategori"]"
-                       class="harita-chip @(!string.IsNullOrEmpty(Context.Request.Query["wifi"]) ? "aktif" : "")">WiFi</a>
-                    <a href="?priz=1&sehir=@Context.Request.Query["sehir"]&kategori=@Context.Request.Query["kategori"]"
-                       class="harita-chip @(!string.IsNullOrEmpty(Context.Request.Query["priz"]) ? "aktif" : "")">Priz</a>
-                    <a href="?bahce=1&sehir=@Context.Request.Query["sehir"]&kategori=@Context.Request.Query["kategori"]"
-                       class="harita-chip @(!string.IsNullOrEmpty(Context.Request.Query["bahce"]) ? "aktif" : "")">Bahçe</a>
+                    @{
+                        var qs = Context.Request.Query;
+                        string Chip(string param, string label) {
+                            var aktif = !string.IsNullOrEmpty(qs[param]);
+                            var href = aktif
+                                ? $"?sehir={qs["sehir"]}&kategori={qs["kategori"]}"
+                                : $"?{param}=1&sehir={qs["sehir"]}&kategori={qs["kategori"]}";
+                            return $"<a href=\"{href}\" class=\"harita-chip{(aktif?" aktif":"")}\">{label}</a>";
+                        }
+                    }
+                    @Html.Raw(Chip("acik","Açık"))
+                    @Html.Raw(Chip("wifi","WiFi"))
+                    @Html.Raw(Chip("priz","Priz"))
+                    @Html.Raw(Chip("bahce","Bahçe"))
                 </div>
             </div>
         </form>
 
         <div class="harita-info">
             @ViewBag.HaritadaMekan konumlu / @ViewBag.ToplamMekan toplam mekan
-            @if ((bool)ViewBag.AktifKonum) { <strong> — konuma göre sıralı</strong> }
+            @if (ViewBag.AktifKonum is bool b && b) { <strong> — konuma göre sıralı</strong> }
         </div>
 
-        <div id="sidebar-liste">
+        <div id="sidebar-liste" style="flex:1;overflow-y:auto;">
             @{
                 var veriler = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(
                     ViewBag.HaritaVerisiJson as string ?? "[]");
             }
             @foreach (var item in veriler ?? new())
             {
-                var mekanId = item.GetProperty("id").GetInt32();
-                var ad = item.GetProperty("ad").GetString() ?? "";
-                var adres = item.GetProperty("adres").GetString() ?? "";
-                var acik = item.GetProperty("suAnAcik").GetBoolean();
-                var kat = item.GetProperty("kategoriDisplay").GetString() ?? "";
-                <div class="mekan-liste-item" onclick="odaklan(@mekanId)" data-id="@mekanId">
-                    <div class="item-ad">@ad</div>
-                    <div class="item-adres">@kat @(!string.IsNullOrEmpty(adres) ? "· " + adres.Substring(0, Math.Min(adres.Length,40)) : "")</div>
+                var mekanId2 = item.GetProperty("id").GetInt32();
+                var ad2 = item.GetProperty("ad").GetString() ?? "";
+                var adres2 = item.GetProperty("adres").GetString() ?? "";
+                var acik2 = item.GetProperty("suAnAcik").GetBoolean();
+                var kat2 = item.GetProperty("kategoriDisplay").GetString() ?? "";
+                <div class="mekan-liste-item" onclick="odaklan(@mekanId2)" data-id="@mekanId2">
+                    <div class="item-ad">@ad2</div>
+                    <div class="item-adres">@kat2@(!string.IsNullOrEmpty(adres2) ? " · " + adres2.Substring(0, Math.Min(adres2.Length,40)) : "")</div>
                     <div class="item-badges">
-                        @if (acik) { <span class="mini-badge mb-acik">Açık</span> }
+                        @if (acik2) { <span class="mini-badge mb-acik">Açık</span> }
                         else { <span class="mini-badge mb-kapali">Kapalı</span> }
                     </div>
                 </div>
@@ -91,37 +102,48 @@
         </div>
     </div>
 
-    <div id="harita"></div>
+    <div id="harita-map"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var haritaVerisi = @Html.Raw(ViewBag.HaritaVerisiJson);
+var haritaVerisi = @Html.Raw(ViewBag.HaritaVerisiJson ?? "[]");
 var markers = {};
 
-var katIkon = {
-    'KAFE':'☕','RESTORAN':'🍽️','KUTUPHANE':'📚','ECZANE':'💊','PUB':'🍺'
+// SVG ikonlar (Lucide stilinde)
+var katSvg = {
+    'KAFE': '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>',
+    'RESTORAN': '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>',
+    'KUTUPHANE': '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>',
+    'ECZANE': '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="m9 3-6 6 6 6"/><path d="m15 3 6 6-6 6"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+    'PUB': '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6"/><path d="M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.44.5-3 .5"/><path d="M3 11V7.5"/><path d="M17 11V7.5"/><path d="M3 7.5C3 5 5.5 3 9 3s6 1.5 6 3"/><line x1="7" y1="19" x2="17" y2="19"/></svg>'
 };
+var defaultSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
 
-function ikonHtml(k, acik) {
-    return '<div style="background:'+(acik?'#10b981':'#ef4444')+';color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3)">' + (katIkon[k]||'📍') + '</div>';
+function ikonHtml(kat, acik) {
+    var bg = acik ? '#10b981' : '#ef4444';
+    var svg = katSvg[kat] || defaultSvg;
+    return '<div style="background:' + bg + ';border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.6)">' + svg + '</div>';
 }
 
-var map = L.map('harita').setView([39.9, 32.8], 6);
+var map = L.map('harita-map').setView([39.9, 32.8], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
 haritaVerisi.forEach(function(m) {
-    if (!m.lat || !m.lng) return;
-    var ikon = L.divIcon({ html: ikonHtml(m.kategori, m.suAnAcik), iconSize:[30,30], className:'' });
-    var popup = '<div style="min-width:180px"><strong>'+m.ad+'</strong><br>'
-        +'<small>'+m.kategoriDisplay+'</small><br>'
-        +(m.ortPuan?'★ '+m.ortPuan.toFixed(1)+' · ':'')
-        +(m.yorumSayisi?m.yorumSayisi+' yorum<br>':'')
-        +(m.dolulukOrani!==null?'Doluluk: %'+m.dolulukOrani+'<br>':'')
-        +(m.suAnAcik?'<span style="color:#10b981">Açık</span>':'<span style="color:#ef4444">Kapalı</span>')
-        +'<br><a href="'+m.detayUrl+'" style="color:#6366f1">Detaya git →</a></div>';
+    if (!m.lat && m.lat !== 0) return;
+    if (!m.lng && m.lng !== 0) return;
+    var ikon = L.divIcon({ html: ikonHtml(m.kategori, m.suAnAcik), iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-16], className:'' });
+    var ad = m.ad ? m.ad.replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+    var popup = '<div style="min-width:190px;font-family:Inter,sans-serif">'
+        + '<strong style="font-size:14px">' + ad + '</strong><br>'
+        + '<small style="color:#64748b">' + (m.kategoriDisplay||'') + '</small><br><br>'
+        + (m.ortPuan ? '<span style="color:#f59e0b">★ ' + m.ortPuan.toFixed(1) + '</span> · ' + (m.yorumSayisi||0) + ' yorum<br>' : '')
+        + (m.dolulukOrani !== null && m.dolulukOrani !== undefined ? 'Doluluk: %' + m.dolulukOrani + '<br>' : '')
+        + '<span style="color:' + (m.suAnAcik?'#10b981':'#ef4444') + ';font-weight:600">' + (m.suAnAcik?'Açık':'Kapalı') + '</span>'
+        + '<br><a href="' + m.detayUrl + '" style="color:#2563eb;font-weight:600;font-size:13px">Detaya git →</a>'
+        + '</div>';
     var marker = L.marker([m.lat, m.lng], {icon: ikon}).addTo(map).bindPopup(popup);
     markers[m.id] = marker;
 });
@@ -129,25 +151,25 @@ haritaVerisi.forEach(function(m) {
 function odaklan(id) {
     var m = markers[id];
     if (m) { map.setView(m.getLatLng(), 16); m.openPopup(); }
+    document.getElementById('sidebar-liste').querySelectorAll('.mekan-liste-item').forEach(function(el){
+        el.style.background = el.dataset.id == id ? 'var(--bg)' : '';
+    });
 }
 
-@if ((bool)ViewBag.AktifKonum && !string.IsNullOrEmpty(ViewBag.UserLat?.ToString()))
+@if (ViewBag.AktifKonum is bool av && av && !string.IsNullOrEmpty(ViewBag.UserLat?.ToString()))
 {
-    @Html.Raw($@"
-    var userLat={ViewBag.UserLat};
-    var userLng={ViewBag.UserLng};
-    L.circleMarker([userLat,userLng],{{radius:10,color:'#6366f1',fillColor:'#6366f1',fillOpacity:0.8}}).addTo(map).bindPopup('📍 Konumunuz');
-    map.setView([userLat,userLng],13);
-    ")
+    @Html.Raw($"var uLat={ViewBag.UserLat};var uLng={ViewBag.UserLng};")
+    @:L.circleMarker([uLat,uLng],{radius:10,color:'#6366f1',fillColor:'#6366f1',fillOpacity:0.8}).addTo(map).bindPopup('<b>Konumunuz</b>');
+    @:map.setView([uLat,uLng],13);
 }
 
 document.getElementById('konum-btn').addEventListener('click', function() {
-    if (!navigator.geolocation) { alert('Konum desteklenmiyor'); return; }
-    this.textContent = '...';
+    if (!navigator.geolocation) { alert('Tarayıcınız konum özelliğini desteklemiyor.'); return; }
+    this.disabled = true; this.textContent = 'Konum alınıyor...';
     navigator.geolocation.getCurrentPosition(function(pos) {
         document.getElementById('lat-inp').value = pos.coords.latitude;
         document.getElementById('lng-inp').value = pos.coords.longitude;
         document.getElementById('harita-form').submit();
-    }, function() { alert('Konum alınamadı.'); });
+    }, function() { alert('Konum alınamadı. Lütfen izin verin.'); document.getElementById('konum-btn').disabled = false; });
 });
 </script>

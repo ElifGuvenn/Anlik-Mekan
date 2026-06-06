@@ -77,8 +77,18 @@ var app = builder.Build();
                 if (!item.TryGetProperty("fields", out var f)) continue;
                 string? Str(string k) { if (!f.TryGetProperty(k, out var e)) return null; var s = e.GetString(); return string.IsNullOrWhiteSpace(s) ? null : s; }
                 bool Bool(string k) => f.TryGetProperty(k, out var e) && e.ValueKind == System.Text.Json.JsonValueKind.True;
-                decimal? Num(string k) { if (f.TryGetProperty(k, out var e) && e.ValueKind == System.Text.Json.JsonValueKind.Number) return (decimal)e.GetDouble(); return null; }
-                int? Int(string k) { if (f.TryGetProperty(k, out var e) && e.ValueKind == System.Text.Json.JsonValueKind.Number) return e.GetInt32(); return null; }
+                decimal? Num(string k) {
+                    if (!f.TryGetProperty(k, out var e)) return null;
+                    if (e.ValueKind == System.Text.Json.JsonValueKind.Number) return (decimal)e.GetDouble();
+                    if (e.ValueKind == System.Text.Json.JsonValueKind.String && decimal.TryParse(e.GetString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d)) return d;
+                    return null;
+                }
+                int? Int(string k) {
+                    if (!f.TryGetProperty(k, out var e)) return null;
+                    if (e.ValueKind == System.Text.Json.JsonValueKind.Number) return e.GetInt32();
+                    if (e.ValueKind == System.Text.Json.JsonValueKind.String && int.TryParse(e.GetString(), out var i)) return i;
+                    return null;
+                }
 
                 db.Mekanlar.Add(new AnlikMekanCore.Models.Entities.Mekan
                 {

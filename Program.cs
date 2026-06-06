@@ -5,7 +5,11 @@ using AnlikMekanCore.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Veritabanı: DATABASE_URL varsa PostgreSQL (Railway/Azure), yoksa SQLite (lokal)
+// Render (ve benzeri) PORT env değişkenini okuyarak dinleme portunu ayarla
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://+:{port}");
+
+// Veritabanı: DATABASE_URL varsa PostgreSQL (Render), yoksa SQLite (lokal)
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (!string.IsNullOrEmpty(databaseUrl))
 {
@@ -62,8 +66,7 @@ var app = builder.Build();
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL")))
-        db.Database.EnsureCreated();
+    db.Database.EnsureCreated();
 
     if (!db.Mekanlar.Any())
     {
@@ -121,4 +124,4 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Landing}/{id?}");
 
-app.Run();
+app.Run($"http://+:{port}");

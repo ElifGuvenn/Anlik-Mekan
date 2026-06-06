@@ -1,7 +1,9 @@
 @model AnlikMekanCore.Models.ViewModels.MekanFormModel
 @{ ViewData["Title"] = "Mekan Ekle"; }
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
+#harita { height: 300px; border-radius: 12px; border: 1.5px solid var(--border); margin-bottom: 8px; }
 .form-wrap { max-width: 680px; margin: 0 auto; padding: 32px 5%; }
 .form-title { font-size: 24px; font-weight: 800; margin-bottom: 28px; }
 .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
@@ -75,20 +77,12 @@
         </div>
 
         <div class="form-section">
-            <div class="section-baslik">Konum (GPS)</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Enlem (Latitude)</label>
-                    <input asp-for="Latitude" class="form-input" step="any" placeholder="Örn: 41.0082">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Boylam (Longitude)</label>
-                    <input asp-for="Longitude" class="form-input" step="any" placeholder="Örn: 28.9784">
-                </div>
-            </div>
-            <button type="button" class="btn-sm" onclick="konumAl()" style="margin-top:4px;">
-                📍 Mevcut Konumumu Kullan
-            </button>
+            <div class="section-baslik">Konum</div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Haritaya tıklayarak mekanın konumunu işaretle. İsteğe bağlı.</p>
+            <div id="harita"></div>
+            <input asp-for="Latitude" type="hidden" id="lat-input">
+            <input asp-for="Longitude" type="hidden" id="lng-input">
+            <small id="koord" style="color:var(--primary);font-weight:600;font-size:12px;"></small>
         </div>
 
         <div class="form-section">
@@ -116,14 +110,31 @@
     </form>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-function konumAl() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(function(p) {
-        document.getElementById('Latitude').value = p.coords.latitude.toFixed(6);
-        document.getElementById('Longitude').value = p.coords.longitude.toFixed(6);
-    });
+const latI = document.getElementById('lat-input');
+const lngI = document.getElementById('lng-input');
+const koord = document.getElementById('koord');
+
+const initLat = parseFloat(latI.value) || 39.9334;
+const initLng = parseFloat(lngI.value) || 32.8597;
+
+const map = L.map('harita').setView([initLat, initLng], latI.value ? 15 : 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+let marker = null;
+if (latI.value && lngI.value) {
+    marker = L.marker([initLat, initLng]).addTo(map);
+    koord.textContent = `Seçili: ${initLat.toFixed(5)}, ${initLng.toFixed(5)}`;
 }
+
+map.on('click', ({ latlng: { lat, lng } }) => {
+    latI.value = lat.toFixed(6);
+    lngI.value = lng.toFixed(6);
+    koord.textContent = `Seçili: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    if (marker) marker.setLatLng([lat, lng]);
+    else marker = L.marker([lat, lng]).addTo(map);
+});
 </script>
 
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

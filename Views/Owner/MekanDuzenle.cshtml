@@ -1,31 +1,43 @@
 @model AnlikMekanCore.Models.ViewModels.MekanFormModel
-@{ ViewData["Title"] = "Mekanı Düzenle"; }
+@{ ViewData["Title"] = "Mekanı Düzenle"; var mekanId = ViewContext.RouteData.Values["id"]; }
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 #harita { height: 300px; border-radius: 12px; border: 1.5px solid var(--border); margin-bottom: 8px; }
-.form-wrap { max-width: 680px; margin: 0 auto; padding: 32px 5%; }
+.form-wrap { max-width: 860px; margin: 0 auto; padding: 32px 5% 80px; }
 .form-title { font-size: 24px; font-weight: 800; margin-bottom: 28px; }
-.form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
-.section-baslik { font-size: 14px; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+.form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+.section-baslik { font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px; }
 .form-group { margin-bottom: 14px; }
-.form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #374151; }
 .form-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text); box-sizing: border-box; }
 .form-input:focus { outline: none; border-color: var(--primary); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .ozellik-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-.ozellik-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer; }
+.ozellik-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; cursor: pointer; transition: .15s; }
 .ozellik-item:has(input:checked) { border-color: var(--primary); background: #eff6ff; }
 .ozellik-item input { margin: 0; accent-color: var(--primary); }
-.btn-full { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.toggle-row { display: flex; align-items: center; gap: 10px; }
+.toggle { position: relative; display: inline-block; width: 40px; height: 22px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--border); border-radius: 22px; transition: .3s; }
+.toggle-slider:before { content:''; position:absolute; width:16px; height:16px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; }
+.toggle input:checked + .toggle-slider { background: var(--primary); }
+.toggle input:checked + .toggle-slider:before { transform:translateX(18px); }
+@@media(max-width:600px) { .form-row { grid-template-columns: 1fr; } .ozellik-grid { grid-template-columns: 1fr 1fr; } }
 </style>
 
 <div class="form-wrap">
-    <div class="form-title">✏️ Mekanı Düzenle</div>
+    <a href="@Url.Action("Dashboard","Owner")" style="font-size:13px;font-weight:600;color:var(--muted);">← Panele Dön</a>
+    <div class="form-title" style="margin-top:12px;">✏️ Mekanı Düzenle</div>
 
-    <form asp-action="MekanDuzenle" asp-controller="Owner" asp-route-id="@ViewContext.RouteData.Values["id"]" method="post" enctype="multipart/form-data">
+    @if (TempData["Mesaj"] != null)
+    { <div style="background:#dcfce7;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;font-weight:600;color:#15803d;">✓ @TempData["Mesaj"]</div> }
+
+    <form asp-action="MekanDuzenle" asp-controller="Owner" asp-route-id="@mekanId" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
 
+        <!-- Temel Bilgiler -->
         <div class="form-section">
             <div class="section-baslik">Temel Bilgiler</div>
             <div class="form-group">
@@ -71,6 +83,55 @@
             </div>
         </div>
 
+        <!-- Fotoğraf -->
+        <div class="form-section">
+            <div class="section-baslik">Yeni Fotoğraf (opsiyonel)</div>
+            <input asp-for="Img" type="file" class="form-input" accept="image/*" style="padding:8px;">
+            <p style="font-size:12px;color:var(--muted);margin-top:6px;">Yeni dosya seçerseniz mevcut fotoğraf değişir.</p>
+        </div>
+
+        <!-- Ruhsat Belgesi -->
+        <div class="form-section">
+            <div class="section-baslik">Ruhsat Belgesi (PDF / Görsel)</div>
+            <input asp-for="RuhsatBelgesi" type="file" class="form-input" accept="image/*,application/pdf" style="padding:8px;">
+            <p style="font-size:12px;color:var(--muted);margin-top:6px;">Yeni dosya seçerseniz mevcut ruhsat değişir. Admin tarafından incelenecektir.</p>
+        </div>
+
+        <!-- Saatler & Durum -->
+        <div class="form-section">
+            <div class="section-baslik">Saatler &amp; Durum</div>
+            <div class="form-row" style="margin-bottom:14px;">
+                <div class="form-group">
+                    <label class="form-label">Açılış Saati</label>
+                    <input asp-for="AcilisSaati" type="time" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kapanış Saati</label>
+                    <input asp-for="KapanisSaati" type="time" class="form-input">
+                </div>
+            </div>
+            <div class="form-row" style="margin-bottom:14px;">
+                <div class="form-group">
+                    <label class="form-label">Doluluk Oranı (%)</label>
+                    <input asp-for="DolulukOrani" type="number" min="0" max="100" class="form-input">
+                </div>
+                <div class="form-group" style="display:flex;align-items:center;gap:10px;padding-top:22px;">
+                    <div class="toggle-row">
+                        <label class="toggle">
+                            <input asp-for="SuAnAcik" type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="form-label" style="margin:0;">Şu an açık</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Anlık Duyuru</label>
+                <input asp-for="AnlikDuyuru" class="form-input" placeholder="Müşterilere anlık bilgi ver…">
+            </div>
+        </div>
+
+        <!-- Konum -->
         <div class="form-section">
             <div class="section-baslik">Konum</div>
             <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Haritaya tıklayarak konumu değiştir.</p>
@@ -80,13 +141,9 @@
             <small id="koord" style="color:var(--primary);font-weight:600;font-size:12px;"></small>
         </div>
 
+        <!-- Olanaklar -->
         <div class="form-section">
-            <div class="section-baslik">Yeni Fotoğraf (opsiyonel)</div>
-            <input asp-for="Img" type="file" class="form-input" accept="image/*" style="padding:8px;">
-        </div>
-
-        <div class="form-section">
-            <div class="section-baslik">Özellikler</div>
+            <div class="section-baslik">Olanaklar</div>
             <div class="ozellik-grid">
                 <label class="ozellik-item"><input asp-for="WifiVar" type="checkbox"> 📶 WiFi</label>
                 <label class="ozellik-item"><input asp-for="PrizVar" type="checkbox"> 🔌 Priz</label>
@@ -101,9 +158,21 @@
             </div>
         </div>
 
+        <!-- Rezervasyon -->
+        <div class="form-section">
+            <div class="section-baslik">Rezervasyon</div>
+            <div class="toggle-row">
+                <label class="toggle">
+                    <input asp-for="RezervasyonAktif" type="checkbox">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="form-label" style="margin:0;">Rezervasyon almayı aktif et</span>
+            </div>
+        </div>
+
         <div style="display:flex;gap:12px;">
-            <a href="@Url.Action("Dashboard","Owner")" style="flex:1;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:600;text-align:center;">İptal</a>
-            <button type="submit" class="btn-full" style="flex:2;">Güncelle</button>
+            <a href="@Url.Action("Dashboard","Owner")" style="flex:1;padding:13px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-weight:600;text-align:center;color:var(--text);">İptal</a>
+            <button type="submit" style="flex:2;padding:13px;background:var(--primary);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Güncelle</button>
         </div>
     </form>
 </div>
@@ -127,8 +196,7 @@ if (latI.value && lngI.value) {
 }
 
 map.on('click', ({ latlng: { lat, lng } }) => {
-    latI.value = lat.toFixed(6);
-    lngI.value = lng.toFixed(6);
+    latI.value = lat.toFixed(6); lngI.value = lng.toFixed(6);
     koord.textContent = `Seçili: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     if (marker) marker.setLatLng([lat, lng]);
     else marker = L.marker([lat, lng]).addTo(map);

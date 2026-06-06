@@ -106,8 +106,15 @@ public class MekanFormModel
     public bool CanliMuzikVar { get; set; }
     public bool EvcilHayvanIzinli { get; set; }
     public bool CocukOyunAlaniVar { get; set; }
+    public bool RezervasyonAktif { get; set; }
+    public bool SuAnAcik { get; set; } = true;
+    public int? DolulukOrani { get; set; }
+    public string? AnlikDuyuru { get; set; }
+    public string? AcilisSaati { get; set; }
+    public string? KapanisSaati { get; set; }
 
     public IFormFile? Img { get; set; }
+    public IFormFile? RuhsatBelgesi { get; set; }
 }
 
 public class HaritaMekanJson

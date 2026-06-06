@@ -67,13 +67,18 @@ public class OwnerController : Controller
         if (!ModelState.IsValid) return View(model);
 
         var imgUrl = model.Img != null ? await _cloudinary.YukleAsync(model.Img) : null;
+        var ruhsatUrl = model.RuhsatBelgesi != null ? await _cloudinary.YukleAsync(model.RuhsatBelgesi) : null;
 
         var mekan = new Mekan
         {
             Ad = model.Ad, Kategori = model.Kategori, Sehir = model.Sehir,
             Adres = model.Adres, Telefon = model.Telefon, Website = model.Website,
             Latitude = model.Latitude, Longitude = model.Longitude,
-            ImgUrl = imgUrl, SahibiId = user.Id,
+            ImgUrl = imgUrl, SahibiId = user.Id, RuhsatBelgesiUrl = ruhsatUrl,
+            SuAnAcik = model.SuAnAcik, DolulukOrani = model.DolulukOrani,
+            AnlikDuyuru = model.AnlikDuyuru, RezervasyonAktif = model.RezervasyonAktif,
+            AcilisSaati = !string.IsNullOrEmpty(model.AcilisSaati) ? TimeOnly.Parse(model.AcilisSaati) : null,
+            KapanisSaati = !string.IsNullOrEmpty(model.KapanisSaati) ? TimeOnly.Parse(model.KapanisSaati) : null,
             WifiVar = model.WifiVar, PrizVar = model.PrizVar,
             CalismaAlaniVar = model.CalismaAlaniVar, OtoparkVar = model.OtoparkVar,
             SigaraIcinUygun = model.SigaraIcinUygun, BahceVar = model.BahceVar,
@@ -102,6 +107,10 @@ public class OwnerController : Controller
             Ad = mekan.Ad, Kategori = mekan.Kategori, Sehir = mekan.Sehir,
             Adres = mekan.Adres, Telefon = mekan.Telefon, Website = mekan.Website,
             Latitude = mekan.Latitude, Longitude = mekan.Longitude,
+            SuAnAcik = mekan.SuAnAcik, DolulukOrani = mekan.DolulukOrani,
+            AnlikDuyuru = mekan.AnlikDuyuru, RezervasyonAktif = mekan.RezervasyonAktif,
+            AcilisSaati = mekan.AcilisSaati?.ToString("HH:mm"),
+            KapanisSaati = mekan.KapanisSaati?.ToString("HH:mm"),
             WifiVar = mekan.WifiVar, PrizVar = mekan.PrizVar,
             CalismaAlaniVar = mekan.CalismaAlaniVar, OtoparkVar = mekan.OtoparkVar,
             SigaraIcinUygun = mekan.SigaraIcinUygun, BahceVar = mekan.BahceVar,
@@ -124,6 +133,10 @@ public class OwnerController : Controller
         mekan.Ad = model.Ad; mekan.Kategori = model.Kategori; mekan.Sehir = model.Sehir;
         mekan.Adres = model.Adres; mekan.Telefon = model.Telefon; mekan.Website = model.Website;
         mekan.Latitude = model.Latitude; mekan.Longitude = model.Longitude;
+        mekan.SuAnAcik = model.SuAnAcik; mekan.DolulukOrani = model.DolulukOrani;
+        mekan.AnlikDuyuru = model.AnlikDuyuru; mekan.RezervasyonAktif = model.RezervasyonAktif;
+        mekan.AcilisSaati = !string.IsNullOrEmpty(model.AcilisSaati) ? TimeOnly.Parse(model.AcilisSaati) : null;
+        mekan.KapanisSaati = !string.IsNullOrEmpty(model.KapanisSaati) ? TimeOnly.Parse(model.KapanisSaati) : null;
         mekan.WifiVar = model.WifiVar; mekan.PrizVar = model.PrizVar;
         mekan.CalismaAlaniVar = model.CalismaAlaniVar; mekan.OtoparkVar = model.OtoparkVar;
         mekan.SigaraIcinUygun = model.SigaraIcinUygun; mekan.BahceVar = model.BahceVar;
@@ -132,6 +145,8 @@ public class OwnerController : Controller
 
         if (model.Img != null)
             mekan.ImgUrl = await _cloudinary.YukleAsync(model.Img);
+        if (model.RuhsatBelgesi != null)
+            mekan.RuhsatBelgesiUrl = await _cloudinary.YukleAsync(model.RuhsatBelgesi);
 
         await _db.SaveChangesAsync();
         TempData["Mesaj"] = $"\"{mekan.Ad}\" güncellendi.";
@@ -312,6 +327,112 @@ public class OwnerController : Controller
 
         _db.Kampanyalar.Remove(k);
         await _db.SaveChangesAsync();
+        return RedirectToAction("Dashboard");
+    }
+
+    // ── Etkinlik ──────────────────────────────────────────────────────────────
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EtkinlikOlustur(int mekanId, string baslik, string? aciklama,
+        DateTime baslangic, DateTime bitis, IFormFile? foto)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+
+        var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId == user.Id);
+        if (mekan == null) return NotFound();
+
+        var fotoUrl = foto != null ? await _cloudinary.YukleAsync(foto) : null;
+
+        _db.Etkinlikler.Add(new Etkinlik
+        {
+            MekanId = mekanId, Baslik = baslik, Aciklama = aciklama ?? "",
+            Baslangic = baslangic, Bitis = bitis, FotoUrl = fotoUrl
+        });
+        await _db.SaveChangesAsync();
+
+        TempData["Mesaj"] = "Etkinlik eklendi.";
+        return RedirectToAction("Dashboard");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EtkinlikSil(int etkinlikId)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+
+        var e = await _db.Etkinlikler.Include(e => e.Mekan)
+            .FirstOrDefaultAsync(e => e.Id == etkinlikId && e.Mekan.SahibiId == user.Id);
+        if (e == null) return NotFound();
+
+        _db.Etkinlikler.Remove(e);
+        await _db.SaveChangesAsync();
+        return RedirectToAction("Dashboard");
+    }
+
+    // ── Galeri ────────────────────────────────────────────────────────────────
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> FotoYukle(int mekanId)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+
+        var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId == user.Id);
+        if (mekan == null) return NotFound();
+
+        var dosyalar = Request.Form.Files.GetFiles("fotolar");
+        foreach (var dosya in dosyalar)
+        {
+            if (!dosya.ContentType.StartsWith("image/")) continue;
+            var url = await _cloudinary.YukleAsync(dosya);
+            if (url != null)
+                _db.MekanFotolar.Add(new MekanFoto { MekanId = mekanId, FotoUrl = url });
+        }
+        await _db.SaveChangesAsync();
+
+        TempData["Mesaj"] = "Fotoğraflar yüklendi.";
+        return RedirectToAction("Dashboard");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> FotoSil(int fotoId)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+
+        var foto = await _db.MekanFotolar.Include(f => f.Mekan)
+            .FirstOrDefaultAsync(f => f.Id == fotoId && f.Mekan.SahibiId == user.Id);
+        if (foto == null) return NotFound();
+
+        _db.MekanFotolar.Remove(foto);
+        await _db.SaveChangesAsync();
+        return RedirectToAction("Dashboard");
+    }
+
+    // ── Menü ─────────────────────────────────────────────────────────────────
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MenuYukle(int mekanId, IFormFile? menu_foto, IFormFile? menu_pdf)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+
+        var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId == user.Id);
+        if (mekan == null) return NotFound();
+
+        if (menu_foto != null)
+            mekan.MenuFotoUrl = await _cloudinary.YukleAsync(menu_foto);
+        if (menu_pdf != null)
+            mekan.MenuPdfUrl = await _cloudinary.YukleAsync(menu_pdf);
+
+        await _db.SaveChangesAsync();
+        TempData["Mesaj"] = "Menü güncellendi.";
         return RedirectToAction("Dashboard");
     }
 }

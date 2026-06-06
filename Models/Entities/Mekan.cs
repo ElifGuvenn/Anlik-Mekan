@@ -52,6 +52,7 @@ public class Mekan
 
     public string? MenuPdfUrl { get; set; }
     public string? MenuFotoUrl { get; set; }
+    public string? RuhsatBelgesiUrl { get; set; }
 
     // Navigation
     public ICollection<Yorum> Yorumlar { get; set; } = new List<Yorum>();

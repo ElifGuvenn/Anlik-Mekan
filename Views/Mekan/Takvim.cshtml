@@ -1,14 +1,19 @@
-@{ ViewData["Title"] = "Etkinlik Takvimi"; ViewData["NavTakvim"] = true; }
+@{ ViewData["Title"] = "Etkinlik Takvimi"; ViewData["NavTakvim"] = true;
+   var aktifFiltre = ViewBag.AktifFiltre as string ?? "tumu"; }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css"/>
 <style>
 .takvim-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 5% 80px; }
-.takvim-baslik { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
-.takvim-baslik h1 { font-size:22px; font-weight:800; }
-.takvim-filtre { display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap; }
-.takvim-filtre select { padding:7px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; background:var(--bg); color:var(--text); }
-.takvim-filtre a { padding:7px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; color:var(--muted); background:var(--bg); }
-.takvim-filtre a.aktif { background:var(--primary); color:white; border-color:var(--primary); }
+.takvim-ust { display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+.takvim-ust h1 { font-size:22px; font-weight:800; }
+.filtre-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+.filtre-tab { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:9px; font-size:13px; font-weight:600; border:1.5px solid var(--border); background:var(--bg); color:var(--muted); text-decoration:none; transition:.15s; }
+.filtre-tab:hover { border-color:var(--primary); color:var(--primary); }
+.filtre-tab.aktif { background:var(--primary); color:white; border-color:var(--primary); }
+.filtre-tab.aktif-takip { background:#7c3aed; color:white; border-color:#7c3aed; }
+.filtre-tab.aktif-favori { background:#dc2626; color:white; border-color:#dc2626; }
+.filtre-bilgi { display:flex; align-items:center; gap:12px; padding:10px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:16px; font-size:13px; color:var(--muted); }
+.filtre-bilgi strong { color:var(--text); }
 #calendar { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
 .fc .fc-toolbar-title { font-size:18px !important; font-weight:800 !important; color:var(--text) !important; }
 .fc .fc-button-primary { background:var(--primary) !important; border-color:var(--primary) !important; font-family:inherit !important; font-weight:600 !important; border-radius:8px !important; }
@@ -18,9 +23,12 @@
 .fc .fc-daygrid-day-number { color:var(--text); font-size:12px; }
 .fc .fc-daygrid-day.fc-day-today { background:rgba(37,99,235,.06) !important; }
 .fc .fc-event { border-radius:5px; font-size:12px; font-weight:600; border:none !important; cursor:pointer; }
-.fc .fc-event-title { font-weight:600; }
 .fc-theme-standard .fc-scrollgrid { border-color:var(--border) !important; }
 .fc-theme-standard td, .fc-theme-standard th { border-color:var(--border) !important; }
+/* Renk açıklamaları */
+.renk-aciklamalar { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+.renk-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--muted); }
+.renk-nokta { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 /* Modal */
 .etk-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; display:none; align-items:center; justify-content:center; }
 .etk-modal-bg.acik { display:flex; }
@@ -29,77 +37,58 @@
 .etk-modal-kapat:hover { background:var(--bg); color:var(--text); }
 .etk-modal-foto { width:100%; height:160px; object-fit:cover; border-radius:10px; margin-bottom:16px; }
 .etk-modal-baslik { font-size:18px; font-weight:800; margin-bottom:6px; }
-.etk-modal-mekan { font-size:13px; color:var(--primary); font-weight:600; margin-bottom:12px; }
-.etk-modal-tarih { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); margin-bottom:8px; }
-.etk-modal-aciklama { font-size:14px; color:var(--text); line-height:1.6; margin-top:12px; }
+.etk-modal-mekan { font-size:13px; color:var(--primary); font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.etk-modal-tarih { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); margin-bottom:6px; }
+.etk-modal-aciklama { font-size:14px; color:var(--text); line-height:1.6; margin-top:12px; border-top:1px solid var(--border); padding-top:12px; }
 .etk-modal-btn { display:block; margin-top:16px; padding:11px; background:var(--primary); color:white; border-radius:10px; font-size:14px; font-weight:700; text-align:center; }
-/* Yaklaşan etkinlikler listesi */
-.yaklaşan-panel { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:24px; }
-.yaklaşan-başlık { font-size:14px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:.8px; margin-bottom:14px; }
-.yaklaşan-liste { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
-.yaklaşan-kart { padding:14px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:border-color .15s; }
-.yaklaşan-kart:hover { border-color:var(--primary); }
-.yk-baslik { font-size:14px; font-weight:700; margin-bottom:4px; }
-.yk-mekan { font-size:12px; color:var(--primary); font-weight:600; margin-bottom:6px; }
-.yk-tarih { font-size:12px; color:var(--muted); display:flex; align-items:center; gap:4px; }
+.etk-tip-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:5px; font-size:11px; font-weight:700; margin-bottom:10px; }
 </style>
 
 <div class="takvim-wrap">
-    <div class="takvim-baslik">
-        <span class="ic" style="font-size:24px"><i data-lucide="calendar-days"></i></span>
+    <div class="takvim-ust">
+        <span class="ic" style="font-size:22px"><i data-lucide="calendar-days"></i></span>
         <h1>Etkinlik Takvimi</h1>
-        <div class="takvim-filtre">
-            <form method="get" style="display:contents">
-                @{ var secilenStr = ViewBag.SecilenMekanId?.ToString() ?? ""; }
-                <select name="mekanId" onchange="this.form.submit()">
-                    <option value="">Tüm Mekanlar</option>
-                    @foreach (dynamic m in ViewBag.Mekanlar)
-                    {
-                        if (secilenStr == m.Id.ToString()) { <option value="@m.Id" selected>@m.Ad</option> }
-                        else { <option value="@m.Id">@m.Ad</option> }
-                    }
-                </select>
-            </form>
-            @if (ViewBag.SecilenMekanId != null)
-            {
-                <a href="@Url.Action("Takvim","Mekan")">Tümünü Göster</a>
-            }
+        <div class="filtre-tabs" style="margin-left:auto;">
+            <a href="@Url.Action("Takvim","Mekan",new{filtre="tumu"})"
+               class="filtre-tab @(aktifFiltre=="tumu"?"aktif":"")">
+                <span class="ic"><i data-lucide="globe"></i></span> Tümü
+            </a>
+            <a href="@Url.Action("Takvim","Mekan",new{filtre="takip"})"
+               class="filtre-tab @(aktifFiltre=="takip"?"aktif-takip":"")">
+                <span class="ic"><i data-lucide="user-check"></i></span> Takip Ettiklerim
+            </a>
+            <a href="@Url.Action("Takvim","Mekan",new{filtre="favori"})"
+               class="filtre-tab @(aktifFiltre=="favori"?"aktif-favori":"")">
+                <span class="ic"><i data-lucide="heart"></i></span> Favorilerim
+            </a>
         </div>
     </div>
 
-    @{
-        var etkinlikler2 = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(
-            ViewBag.EtkinlikJson as string ?? "[]");
-        var yaklasan = etkinlikler2?.Where(e => {
-            if (!e.TryGetProperty("start", out var s)) return false;
-            return DateTime.TryParse(s.GetString(), out var dt) && dt >= DateTime.Now && dt <= DateTime.Now.AddDays(14);
-        }).Take(6).ToList();
-    }
-
-    @if (yaklasan?.Any() == true)
+    @if (aktifFiltre == "takip")
     {
-        <div class="yaklaşan-panel">
-            <div class="yaklaşan-başlık">Yaklaşan Etkinlikler (14 gün)</div>
-            <div class="yaklaşan-liste">
-                @foreach (var e in yaklasan)
-                {
-                    var baslik = e.GetProperty("baslik").GetString() ?? "";
-                    var mekanAd = e.GetProperty("mekanAd").GetString() ?? "";
-                    var start = e.GetProperty("start").GetString() ?? "";
-                    var eid = e.GetProperty("id").GetInt32();
-                    DateTime.TryParse(start, out var startDt);
-                    <div class="yaklaşan-kart" onclick="etkinlikAc(@eid)">
-                        <div class="yk-baslik">@baslik</div>
-                        <div class="yk-mekan">@mekanAd</div>
-                        <div class="yk-tarih">
-                            <span class="ic"><i data-lucide="clock"></i></span>
-                            @startDt.ToString("d MMM, HH:mm")
-                        </div>
-                    </div>
-                }
-            </div>
+        <div class="filtre-bilgi">
+            <span class="ic"><i data-lucide="info"></i></span>
+            Takip ettiğiniz mekan sahiplerinin yeni etkinlik ve kampanyaları burada görünür.
+            <strong>@ViewBag.EtkinlikSayisi etkinlik, @ViewBag.KampanyaSayisi kampanya</strong>
         </div>
     }
+    else if (aktifFiltre == "favori")
+    {
+        <div class="filtre-bilgi">
+            <span class="ic"><i data-lucide="info"></i></span>
+            Favori mekanlarınızdaki etkinlik ve kampanyalar.
+            <strong>@ViewBag.EtkinlikSayisi etkinlik, @ViewBag.KampanyaSayisi kampanya</strong>
+        </div>
+    }
+
+    <div class="renk-aciklamalar">
+        @if (aktifFiltre == "tumu") { <div class="renk-chip"><div class="renk-nokta" style="background:#2563eb"></div>Etkinlik</div> }
+        else if (aktifFiltre == "takip") { <div class="renk-chip"><div class="renk-nokta" style="background:#7c3aed"></div>Etkinlik (takip)</div> }
+        else { <div class="renk-chip"><div class="renk-nokta" style="background:#dc2626"></div>Etkinlik (favori)</div> }
+        <div class="renk-chip"><div class="renk-nokta" style="background:#f59e0b"></div>Aktif kampanya</div>
+        <div class="renk-chip"><div class="renk-nokta" style="background:#22c55e"></div>Yaklaşan kampanya</div>
+        <div class="renk-chip"><div class="renk-nokta" style="background:#94a3b8"></div>Sona eren kampanya</div>
+    </div>
 
     <div id="calendar"></div>
 </div>
@@ -108,42 +97,74 @@
 <div class="etk-modal-bg" id="etk-modal-bg" onclick="if(event.target===this)kapatModal()">
     <div class="etk-modal">
         <button class="etk-modal-kapat" onclick="kapatModal()"><span class="ic"><i data-lucide="x"></i></span></button>
+        <div id="etk-tip-badge" class="etk-tip-badge"></div>
         <img id="etk-foto" class="etk-modal-foto" src="" alt="" style="display:none">
         <div class="etk-modal-baslik" id="etk-baslik"></div>
-        <div class="etk-modal-mekan" id="etk-mekan"></div>
+        <div class="etk-modal-mekan">
+            <span class="ic"><i data-lucide="map-pin"></i></span>
+            <a id="etk-mekan-link" href="#" style="color:inherit;" id="etk-mekan"></a>
+        </div>
         <div class="etk-modal-tarih"><span class="ic"><i data-lucide="calendar"></i></span><span id="etk-tarih"></span></div>
-        <div class="etk-modal-tarih"><span class="ic"><i data-lucide="clock"></i></span><span id="etk-saat"></span></div>
-        <div class="etk-modal-aciklama" id="etk-aciklama"></div>
+        <div class="etk-modal-tarih" id="etk-saat-row"><span class="ic"><i data-lucide="clock"></i></span><span id="etk-saat"></span></div>
+        <div class="etk-modal-aciklama" id="etk-aciklama" style="display:none"></div>
         <a id="etk-link" href="#" class="etk-modal-btn">Mekanı Gör →</a>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 <script>
-var etkinlikler = @Html.Raw(ViewBag.EtkinlikJson ?? "[]");
-var etkinlikMap = {};
-etkinlikler.forEach(function(e){ etkinlikMap[e.id] = e; });
+var events = @Html.Raw(ViewBag.EventsJson ?? "[]");
 
-function formatTarih(str) {
-    var d = new Date(str);
-    return d.toLocaleDateString('tr-TR', {day:'numeric',month:'long',year:'numeric'});
+function fmtTarih(str) {
+    return new Date(str).toLocaleDateString('tr-TR', {day:'numeric',month:'long',year:'numeric'});
 }
-function formatSaat(str) {
-    var d = new Date(str);
-    return d.toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+function fmtSaat(str) {
+    return new Date(str).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
 }
 
-function etkinlikAc(id) {
-    var e = etkinlikMap[id]; if (!e) return;
-    document.getElementById('etk-baslik').textContent = e.baslik;
-    document.getElementById('etk-mekan').textContent = e.mekanAd;
-    document.getElementById('etk-tarih').textContent = formatTarih(e.start) + ' – ' + formatTarih(e.end);
-    document.getElementById('etk-saat').textContent = formatSaat(e.start) + ' – ' + formatSaat(e.end);
-    document.getElementById('etk-aciklama').textContent = e.aciklama || '';
-    document.getElementById('etk-link').href = e.detayUrl;
+function etkinlikAc(info) {
+    var p = info.event.extendedProps;
+    var isKampanya = p.tip === 'kampanya';
+
+    var badge = document.getElementById('etk-tip-badge');
+    if (isKampanya) {
+        badge.textContent = p.durum || 'Kampanya';
+        badge.style.background = info.event.backgroundColor + '22';
+        badge.style.color = info.event.backgroundColor;
+    } else {
+        badge.textContent = 'Etkinlik';
+        badge.style.background = '#eff6ff';
+        badge.style.color = '#2563eb';
+    }
+
+    // Başlık: "Etkinlik adı — Mekan adı" formatından sadece etkinlik adı
+    var fullTitle = info.event.title;
+    var sepIdx = fullTitle.lastIndexOf(' — ');
+    document.getElementById('etk-baslik').textContent = sepIdx > 0 ? fullTitle.substring(0, sepIdx) : fullTitle;
+
+    var mekanEl = document.getElementById('etk-mekan');
+    mekanEl.textContent = p.mekanAd || '';
+    document.getElementById('etk-mekan-link').href = p.detayUrl || '#';
+
+    document.getElementById('etk-tarih').textContent = fmtTarih(info.event.startStr) + (isKampanya ? ' – ' + fmtTarih(info.event.endStr || info.event.startStr) : '');
+
+    var saatRow = document.getElementById('etk-saat-row');
+    if (isKampanya) {
+        saatRow.style.display = 'none';
+    } else {
+        saatRow.style.display = 'flex';
+        document.getElementById('etk-saat').textContent = fmtSaat(info.event.startStr) + ' – ' + fmtSaat(info.event.endStr || info.event.startStr);
+    }
+
+    var aclEl = document.getElementById('etk-aciklama');
+    if (p.aciklama) { aclEl.textContent = p.aciklama; aclEl.style.display = 'block'; }
+    else { aclEl.style.display = 'none'; }
+
     var foto = document.getElementById('etk-foto');
-    if (e.fotoUrl) { foto.src = e.fotoUrl; foto.style.display = 'block'; }
+    if (p.fotoUrl) { foto.src = p.fotoUrl; foto.style.display = 'block'; }
     else { foto.style.display = 'none'; }
+
+    document.getElementById('etk-link').href = p.detayUrl || '#';
     document.getElementById('etk-modal-bg').classList.add('acik');
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -155,18 +176,15 @@ function kapatModal() {
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') kapatModal(); });
 
 document.addEventListener('DOMContentLoaded', function() {
-    var calEl = document.getElementById('calendar');
-    var cal = new FullCalendar.Calendar(calEl, {
+    var cal = new FullCalendar.Calendar(document.getElementById('calendar'), {
         locale: 'tr',
         initialView: 'dayGridMonth',
         headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
         buttonText: { today: 'Bugün', month: 'Ay', week: 'Hafta', list: 'Liste' },
         height: 'auto',
-        events: etkinlikler.map(function(e){ return { id: String(e.id), title: e.title, start: e.start, end: e.end, color: e.color, extendedProps: { etkinlikId: e.id } }; }),
-        eventClick: function(info) { etkinlikAc(info.event.extendedProps.etkinlikId); },
-        eventMouseEnter: function(info) { info.el.style.opacity = '0.85'; info.el.style.cursor = 'pointer'; },
-        eventMouseLeave: function(info) { info.el.style.opacity = '1'; },
-        noEventsContent: 'Bu dönemde etkinlik bulunmuyor.',
+        events: events,
+        eventClick: etkinlikAc,
+        noEventsContent: 'Bu dönemde etkinlik / kampanya bulunmuyor.',
     });
     cal.render();
     if (typeof lucide !== 'undefined') lucide.createIcons();

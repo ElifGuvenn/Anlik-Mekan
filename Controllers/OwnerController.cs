@@ -41,6 +41,7 @@ public class OwnerController : Controller
             .Include(m => m.Kampanyalar)
             .Include(m => m.CalismaGunleri)
             .Include(m => m.Fotolar)
+            .Include(m => m.Favorileyenler)
             .Where(m => m.SahibiId == user.Id)
             .ToListAsync();
 
@@ -236,6 +237,13 @@ public class OwnerController : Controller
         {
             rez.Durum = durum;
             await _db.SaveChangesAsync();
+
+            var tip = durum == "ONAYLANDI" ? "REZERVASYON" : "REZERVASYON";
+            var msg = durum == "ONAYLANDI"
+                ? $"Rezervasyonunuz onaylandı: {rez.Mekan.Ad}, {rez.Tarih:dd MMM}."
+                : $"Rezervasyonunuz reddedildi: {rez.Mekan.Ad}, {rez.Tarih:dd MMM}.";
+            await BildirimHelper.OlusturAsync(_db, rez.KullaniciId, tip, msg,
+                "/Rezervasyon/Index");
         }
         return RedirectToAction("Dashboard");
     }
@@ -309,6 +317,11 @@ public class OwnerController : Controller
             Baslangic = baslangic, Bitis = bitis, FotoUrl = fotoUrl
         });
         await _db.SaveChangesAsync();
+
+        // Mekan sahibini takip eden kullanıcılara bildirim
+        await BildirimHelper.TakipcilareBildirimAsync(_db, user.Id, "KAMPANYA",
+            $"{mekan.Ad} yeni kampanya ekledi: {baslik}",
+            $"/Mekan/Detay/{mekanId}");
 
         TempData["Mesaj"] = "Kampanya oluşturuldu.";
         return RedirectToAction("Dashboard");

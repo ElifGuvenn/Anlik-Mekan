@@ -7,6 +7,7 @@ using AnlikMekanCore.Models;
 using AnlikMekanCore.Models.Entities;
 using AnlikMekanCore.Models.ViewModels;
 using AnlikMekanCore.Services;
+using System.Text.Json.Serialization;
 
 namespace AnlikMekanCore.Controllers;
 
@@ -107,7 +108,56 @@ public class MekanController : Controller
         }
         await _db.SaveChangesAsync();
 
+        // Mekan sahibine bildirim
+        var mekanSahibi = await _db.Mekanlar
+            .Where(m => m.Id == id && m.SahibiId != null)
+            .Select(m => m.SahibiId!)
+            .FirstOrDefaultAsync();
+        if (mekanSahibi != null)
+            await BildirimHelper.OlusturAsync(_db, mekanSahibi, "YORUM",
+                $"{user.UserName} mekanınıza yorum yazdı.",
+                $"/Mekan/Detay/{id}", user.Id);
+
         return RedirectToAction("Detay", new { id });
+    }
+
+    // ── Takip ────────────────────────────────────────────────────────────────
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TakipEt(int mekanId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null) return Json(new { hata = "Giriş gerekli" });
+
+        var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId != null);
+        if (mekan == null) return Json(new { hata = "Mekan bulunamadı" });
+        if (mekan.SahibiId == user.Id) return Json(new { hata = "Kendi mekanınızı takip edemezsiniz" });
+
+        var mevcut = await _db.Takipler.FirstOrDefaultAsync(t =>
+            t.TakipciId == user.Id && t.TakipEdilenId == mekan.SahibiId);
+
+        bool takipEdiyor;
+        if (mevcut != null)
+        {
+            _db.Takipler.Remove(mevcut);
+            await _db.SaveChangesAsync();
+            takipEdiyor = false;
+        }
+        else
+        {
+            _db.Takipler.Add(new Takip { TakipciId = user.Id, TakipEdilenId = mekan.SahibiId! });
+            await _db.SaveChangesAsync();
+            takipEdiyor = true;
+
+            await BildirimHelper.OlusturAsync(_db, mekan.SahibiId!, "TAKIP",
+                $"{user.UserName} mekanınızı takip etmeye başladı.",
+                $"/Mekan/Detay/{mekanId}", user.Id);
+        }
+
+        var takipciSayisi = await _db.Takipler.CountAsync(t => t.TakipEdilenId == mekan.SahibiId);
+        return Json(new { takipEdiyor, takipciSayisi });
     }
 
     // ── Harita ───────────────────────────────────────────────────────────────
@@ -176,39 +226,99 @@ public class MekanController : Controller
     // ── Etkinlik Takvimi ─────────────────────────────────────────────────────
 
     [Authorize]
-    public async Task<IActionResult> Takvim(int? mekanId)
+    public async Task<IActionResult> Takvim(string filtre = "tumu")
     {
-        var etkinlikler = await _db.Etkinlikler
+        var user = await _userManager.GetUserAsync(User);
+        var now = DateTime.UtcNow;
+
+        // Tüm etkinlikler ve kampanyalar (bitmemişler)
+        var etkinliklerQ = _db.Etkinlikler
             .Include(e => e.Mekan)
-            .Where(e => e.Bitis >= DateTime.UtcNow.AddMonths(-1))
-            .OrderBy(e => e.Baslangic)
-            .ToListAsync();
+            .Where(e => e.Bitis >= now)
+            .AsQueryable();
 
-        if (mekanId.HasValue)
-            etkinlikler = etkinlikler.Where(e => e.MekanId == mekanId.Value).ToList();
+        var kampanyalarQ = _db.Kampanyalar
+            .Include(k => k.Mekan)
+            .AsQueryable();
 
-        var mekanlar = await _db.Mekanlar
-            .Where(m => m.IsApproved)
-            .Select(m => new { m.Id, m.Ad })
-            .OrderBy(m => m.Ad)
-            .ToListAsync();
+        if (filtre == "takip" && user != null)
+        {
+            // Takip edilen kullanıcıların mekanları
+            var takipEdilenIds = await _db.Takipler
+                .Where(t => t.TakipciId == user.Id)
+                .Select(t => t.TakipEdilenId)
+                .ToListAsync();
 
-        var etkinlikJson = etkinlikler.Select(e => new {
-            id = e.Id,
-            title = e.Baslik,
-            start = e.Baslangic.ToString("yyyy-MM-ddTHH:mm:ss"),
-            end = e.Bitis.ToString("yyyy-MM-ddTHH:mm:ss"),
-            mekanAd = e.Mekan.Ad,
-            mekanId = e.MekanId,
-            aciklama = e.Aciklama,
-            fotoUrl = e.FotoUrl,
-            detayUrl = Url.Action("Detay", "Mekan", new { id = e.MekanId }) ?? "",
-            color = e.Bitis < DateTime.UtcNow ? "#94a3b8" : "#2563eb"
-        }).ToList();
+            etkinliklerQ = etkinliklerQ.Where(e => e.Mekan.SahibiId != null && takipEdilenIds.Contains(e.Mekan.SahibiId!));
+            kampanyalarQ = kampanyalarQ.Where(k => k.Mekan.SahibiId != null && takipEdilenIds.Contains(k.Mekan.SahibiId!));
+        }
+        else if (filtre == "favori" && user != null)
+        {
+            var favoriIds = await _db.Users
+                .Where(u => u.Id == user.Id)
+                .SelectMany(u => u.FavoriMekanlar.Select(m => m.Id))
+                .ToListAsync();
 
-        ViewBag.EtkinlikJson = JsonSerializer.Serialize(etkinlikJson, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-        ViewBag.Mekanlar = mekanlar;
-        ViewBag.SecilenMekanId = mekanId;
+            etkinliklerQ = etkinliklerQ.Where(e => favoriIds.Contains(e.MekanId));
+            kampanyalarQ = kampanyalarQ.Where(k => favoriIds.Contains(k.MekanId));
+        }
+
+        var etkinlikler = await etkinliklerQ.OrderBy(e => e.Baslangic).ToListAsync();
+        var kampanyalar = await kampanyalarQ.OrderByDescending(k => k.Baslangic).ToListAsync();
+
+        // Filtre rengine göre etkinlik rengi
+        var etkinlikRenk = filtre switch { "takip" => "#7c3aed", "favori" => "#dc2626", _ => "#2563eb" };
+
+        var events = new List<object>();
+
+        foreach (var e in etkinlikler)
+        {
+            events.Add(new {
+                id = $"e_{e.Id}",
+                title = e.Baslik + " — " + e.Mekan.Ad,
+                start = e.Baslangic.ToString("yyyy-MM-ddTHH:mm:ss"),
+                end = e.Bitis.ToString("yyyy-MM-ddTHH:mm:ss"),
+                color = etkinlikRenk,
+                extendedProps = new {
+                    tip = "etkinlik",
+                    mekanAd = e.Mekan.Ad,
+                    aciklama = e.Aciklama,
+                    fotoUrl = e.FotoUrl,
+                    detayUrl = Url.Action("Detay", "Mekan", new { id = e.MekanId }) ?? ""
+                }
+            });
+        }
+
+        foreach (var k in kampanyalar)
+        {
+            var durum = now < k.Baslangic ? "Yakında"
+                      : now <= k.Bitis ? "Aktif"
+                      : "Sona Erdi";
+            var renk = durum == "Yakında" ? "#22c55e"
+                     : durum == "Aktif" ? "#f59e0b"
+                     : "#94a3b8";
+            events.Add(new {
+                id = $"k_{k.Id}",
+                title = k.Baslik + " — " + k.Mekan.Ad,
+                start = k.Baslangic.ToString("yyyy-MM-dd"),
+                end = k.Bitis.AddDays(1).ToString("yyyy-MM-dd"),
+                color = renk,
+                allDay = true,
+                extendedProps = new {
+                    tip = "kampanya",
+                    durum,
+                    mekanAd = k.Mekan.Ad,
+                    aciklama = k.Aciklama,
+                    detayUrl = Url.Action("Detay", "Mekan", new { id = k.MekanId }) ?? ""
+                }
+            });
+        }
+
+        ViewBag.EventsJson = JsonSerializer.Serialize(events,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        ViewBag.AktifFiltre = filtre;
+        ViewBag.EtkinlikSayisi = etkinlikler.Count;
+        ViewBag.KampanyaSayisi = kampanyalar.Count;
         return View();
     }
 

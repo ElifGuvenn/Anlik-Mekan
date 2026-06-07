@@ -85,8 +85,28 @@
             @if (!string.IsNullOrEmpty(Model.Mekan.AnlikDuyuru))
             {
                 <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-top:10px;font-size:14px;">
-                    📢 @Model.Mekan.AnlikDuyuru
+                    <span class="ic"><i data-lucide="megaphone"></i></span> @Model.Mekan.AnlikDuyuru
                 </div>
+            }
+
+            @if (User.Identity?.IsAuthenticated == true && Model.Mekan.SahibiId != null)
+            {
+                var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (currentUserId != Model.Mekan.SahibiId)
+                {
+                    <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <form id="takip-form" asp-action="TakipEt" asp-controller="Mekan" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="mekanId" value="@Model.Mekan.Id">
+                            <button type="submit" id="takip-btn"
+                                style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid @(Model.TakipEdiyor ? "var(--primary)" : "var(--border)");background:@(Model.TakipEdiyor ? "var(--primary)" : "var(--bg)");color:@(Model.TakipEdiyor ? "white" : "var(--text)");">
+                                <span class="ic"><i data-lucide="@(Model.TakipEdiyor ? "user-check" : "user-plus")"></i></span>
+                                <span id="takip-label">@(Model.TakipEdiyor ? "Takip Ediliyor" : "Takip Et")</span>
+                            </button>
+                        </form>
+                        <span id="takipci-sayisi" style="font-size:13px;color:var(--muted);"></span>
+                    </div>
+                }
             }
         </div>
     </div>
@@ -186,15 +206,6 @@
         </div>
 
         <div>
-            @if (Model.Mekan.Latitude.HasValue && Model.Mekan.Longitude.HasValue)
-            {
-                <div class="card">
-                    <div class="card-baslik">🗺️ Konum</div>
-                    <div id="harita-kucuk"></div>
-                    <div style="font-size:13px;color:var(--muted);">@Model.Mekan.Adres</div>
-                </div>
-            }
-
             <div class="card">
                 <div class="card-baslik">🕐 Çalışma Saatleri</div>
                 @{
@@ -291,12 +302,46 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Yıldız puanlama
     var labels = document.querySelectorAll('.puan-secici label');
-    var radios = document.querySelectorAll('.puan-secici input[type=radio]');
     labels.forEach(function (lbl, i) {
         lbl.addEventListener('click', function () {
             labels.forEach(function (l, j) { l.classList.toggle('aktif', j <= i); });
         });
     });
+
+    // Takip AJAX
+    var takipForm = document.getElementById('takip-form');
+    if (takipForm) {
+        takipForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var fd = new FormData(takipForm);
+            fetch(takipForm.action, { method: 'POST', body: fd })
+                .then(function(r){ return r.json(); })
+                .then(function(data) {
+                    if (data.hata) return;
+                    var btn = document.getElementById('takip-btn');
+                    var lbl = document.getElementById('takip-label');
+                    if (data.takipEdiyor) {
+                        btn.style.background = 'var(--primary)';
+                        btn.style.color = 'white';
+                        btn.style.borderColor = 'var(--primary)';
+                        btn.querySelector('i').setAttribute('data-lucide', 'user-check');
+                        lbl.textContent = 'Takip Ediliyor';
+                    } else {
+                        btn.style.background = 'var(--bg)';
+                        btn.style.color = 'var(--text)';
+                        btn.style.borderColor = 'var(--border)';
+                        btn.querySelector('i').setAttribute('data-lucide', 'user-plus');
+                        lbl.textContent = 'Takip Et';
+                    }
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    var sayiEl = document.getElementById('takipci-sayisi');
+                    if (sayiEl && data.takipciSayisi > 0)
+                        sayiEl.textContent = data.takipciSayisi + ' takipçi';
+                })
+                .catch(function(){});
+        });
+    }
 });
 </script>

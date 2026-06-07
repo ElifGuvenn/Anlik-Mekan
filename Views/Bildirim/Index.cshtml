@@ -2,26 +2,31 @@
 @{ ViewData["Title"] = "Bildirimler"; }
 
 <style>
-.bildirim-wrap { max-width: 700px; margin: 0 auto; padding: 28px 5%; }
-.bildirim-baslik { font-size: 22px; font-weight: 800; margin-bottom: 20px; }
+.bildirim-wrap { max-width: 700px; margin: 0 auto; padding: 28px 5% 80px; }
+.bildirim-baslik { font-size: 22px; font-weight: 800; margin-bottom: 20px; display:flex; align-items:center; gap:10px; }
 .bildirim-item { display: flex; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; transition: background .15s; }
 .bildirim-item.okunmamis { border-left: 3px solid var(--primary); background: #eff6ff; }
 [data-theme="dark"] .bildirim-item.okunmamis { background: #1e3a5f; }
-.bildirim-ikon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.bildirim-ikon { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .bildirim-icerik { flex: 1; }
 .bildirim-mesaj { font-size: 14px; margin-bottom: 4px; line-height: 1.5; }
-.bildirim-tarih { font-size: 12px; color: var(--muted); }
+.bildirim-tarih { font-size: 12px; color: var(--muted); display:flex; align-items:center; gap:4px; }
 .bos { text-align: center; padding: 60px 20px; color: var(--muted); }
-.bos-icon { font-size: 48px; margin-bottom: 12px; }
 </style>
 
 <div class="bildirim-wrap">
-    <div class="bildirim-baslik">🔔 Bildirimler</div>
+    <div class="bildirim-baslik">
+        <span class="ic"><i data-lucide="bell"></i></span> Bildirimler
+        @if (Model.Any(b => !b.Okundu))
+        {
+            <span style="background:var(--primary);color:white;font-size:11px;font-weight:800;padding:2px 8px;border-radius:10px;">@Model.Count(b=>!b.Okundu) yeni</span>
+        }
+    </div>
 
     @if (!Model.Any())
     {
         <div class="bos">
-            <div class="bos-icon">🔔</div>
+            <div style="margin-bottom:16px;opacity:.4"><span class="ic" style="font-size:48px"><i data-lucide="bell-off"></i></span></div>
             <div style="font-size:17px;font-weight:700;margin-bottom:6px;">Bildirim yok</div>
             <div>Henüz hiç bildirim almadınız.</div>
         </div>
@@ -29,19 +34,61 @@
 
     @foreach (var b in Model)
     {
+        var ikonAdi = b.Tip switch {
+                "YORUM"       => "message-circle",
+                "BEGENI"      => "heart",
+                "TAKIP"       => "user-plus",
+                "ONAY"        => "check-circle",
+                "KAMPANYA"    => "tag",
+                "REZERVASYON" => "calendar-check",
+                "DUYURU"      => "megaphone",
+                "YANIT"       => "corner-down-right",
+                _             => "bell"
+            };
+            var ikonBg = b.Tip switch {
+                "YORUM"       => "#eff6ff",
+                "BEGENI"      => "#fdf2f8",
+                "TAKIP"       => "#f0fdf4",
+                "ONAY"        => "#f0fdf4",
+                "KAMPANYA"    => "#fff7ed",
+                "REZERVASYON" => "#fef3c7",
+                "DUYURU"      => "#eff6ff",
+                "YANIT"       => "#f5f3ff",
+                _             => "#f8fafc"
+            };
+            var ikonRenk = b.Tip switch {
+                "YORUM"       => "#2563eb",
+                "BEGENI"      => "#db2777",
+                "TAKIP"       => "#059669",
+                "ONAY"        => "#059669",
+                "KAMPANYA"    => "#d97706",
+                "REZERVASYON" => "#d97706",
+                "DUYURU"      => "#6366f1",
+                "YANIT"       => "#7c3aed",
+                _             => "#64748b"
+            };
+            var sure = DateTime.UtcNow - b.Olusturuldu;
+            var sureStr = sure.TotalMinutes < 2 ? "Az önce"
+                : sure.TotalMinutes < 60 ? $"{(int)sure.TotalMinutes} dk önce"
+                : sure.TotalHours < 24 ? $"{(int)sure.TotalHours} saat önce"
+                : sure.TotalDays < 7 ? $"{(int)sure.TotalDays} gün önce"
+                : b.Olusturuldu.ToString("dd MMM yyyy");
         <div class="bildirim-item @(!b.Okundu ? "okunmamis" : "")">
-            <div class="bildirim-ikon">
-                @(b.Tip == "YORUM" ? "💬" : b.Tip == "REZERVASYON" ? "📅" : b.Tip == "KAMPANYA" ? "🎁" : "📢")
+            <div class="bildirim-ikon" style="background:@ikonBg;color:@ikonRenk;">
+                <span class="ic"><i data-lucide="@ikonAdi"></i></span>
             </div>
             <div class="bildirim-icerik">
                 <div class="bildirim-mesaj">
                     @b.Mesaj
                     @if (!string.IsNullOrEmpty(b.Link))
                     {
-                        <a href="@b.Link" style="color:var(--primary);font-size:12px;margin-left:6px;">görüntüle →</a>
+                        <a href="@b.Link" style="color:var(--primary);font-size:12px;font-weight:600;margin-left:6px;">görüntüle →</a>
                     }
                 </div>
-                <div class="bildirim-tarih">@b.Olusturuldu.ToString("dd MMM yyyy HH:mm")</div>
+                <div class="bildirim-tarih">
+                    <span class="ic"><i data-lucide="clock"></i></span>
+                    @sureStr
+                </div>
             </div>
             @if (!b.Okundu)
             {

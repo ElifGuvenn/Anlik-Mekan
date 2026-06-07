@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AnlikMekanCore.Models;
 using AnlikMekanCore.Models.Entities;
+using AnlikMekanCore.Services;
 
 namespace AnlikMekanCore.Controllers;
 
@@ -56,6 +57,12 @@ public class RezervasyonController : Controller
             KisiSayisi = kisiSayisi, NotMesaj = notMesaj ?? ""
         });
         await _db.SaveChangesAsync();
+
+        // Mekan sahibine bildirim
+        if (mekan.SahibiId != null)
+            await BildirimHelper.OlusturAsync(_db, mekan.SahibiId, "REZERVASYON",
+                $"{user.UserName} rezervasyon talebi gönderdi: {tarih:dd MMM}, {kisiSayisi} kişi.",
+                $"/Owner/Dashboard", user.Id);
 
         TempData["Mesaj"] = "Rezervasyon talebiniz gönderildi!";
         return RedirectToAction("Detay", "Mekan", new { id = mekanId });

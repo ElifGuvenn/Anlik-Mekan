@@ -88,11 +88,19 @@
     </div>
 
     <div class="sekme-bar">
-        <button class="sekme aktif" onclick="sekmeAc(this,'tab-yorumlar')">💬 Yorumlarım (@ViewBag.YorumSayisi)</button>
-        <button class="sekme" onclick="sekmeAc(this,'tab-favoriler')">❤️ Favorilerim (@ViewBag.FavoriSayisi)</button>
-        <button class="sekme" onclick="window.location.href='@Url.Action("Index","Liste")'">📋 Listelerim</button>
-        <button class="sekme" onclick="sekmeAc(this,'tab-hesap')">⚙️ Hesap Ayarları</button>
+        @if (user.Rol != "OWNER")
+        {
+            <button class="sekme aktif" onclick="sekmeAc(this,'tab-yorumlar')"><span class="ic"><i data-lucide="message-circle"></i></span> Yorumlarım (@ViewBag.YorumSayisi)</button>
+            <button class="sekme" onclick="sekmeAc(this,'tab-favoriler')"><span class="ic"><i data-lucide="heart"></i></span> Favorilerim (@ViewBag.FavoriSayisi)</button>
+            <button class="sekme" onclick="window.location.href='@Url.Action("Index","Liste")'"><span class="ic"><i data-lucide="list"></i></span> Listelerim</button>
+        }
+        <button class="sekme @(user.Rol == "OWNER" ? "aktif" : "")" onclick="sekmeAc(this,'tab-hesap')"><span class="ic"><i data-lucide="settings"></i></span> Hesap Ayarları</button>
     </div>
+
+    @if (user.Rol == "OWNER")
+    {
+        <script>document.addEventListener('DOMContentLoaded',function(){ document.querySelectorAll('.sekme-icerik').forEach(t=>t.classList.remove('goster')); var h=document.getElementById('tab-hesap'); if(h) h.classList.add('goster'); });</script>
+    }
 
     <div id="tab-yorumlar" class="sekme-icerik goster">
         @if (!yorumlar.Any())

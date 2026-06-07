@@ -144,6 +144,10 @@ public class MekanController : Controller
             _db.Takipler.Remove(mevcut);
             await _db.SaveChangesAsync();
             takipEdiyor = false;
+
+            await BildirimHelper.OlusturAsync(_db, mekan.SahibiId!, "TAKIP",
+                $"{user.UserName} mekanınızı takip etmeyi bıraktı.",
+                $"/Mekan/Detay/{mekanId}", user.Id);
         }
         else
         {

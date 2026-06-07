@@ -80,10 +80,6 @@
             <div class="bildirim-icerik">
                 <div class="bildirim-mesaj">
                     @b.Mesaj
-                    @if (!string.IsNullOrEmpty(b.Link))
-                    {
-                        <a href="@b.Link" style="color:var(--primary);font-size:12px;font-weight:600;margin-left:6px;">görüntüle →</a>
-                    }
                 </div>
                 <div class="bildirim-tarih">
                     <span class="ic"><i data-lucide="clock"></i></span>

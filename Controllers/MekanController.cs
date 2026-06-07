@@ -47,6 +47,7 @@ public class MekanController : Controller
 
         var kullaniciBegendigi = new HashSet<int>();
         var takipEdiyor = false;
+        var kullaniciListeleri = new List<MekanListesi>();
 
         if (user != null)
         {
@@ -57,6 +58,12 @@ public class MekanController : Controller
             if (mekan.SahibiId != null)
                 takipEdiyor = await _db.Takipler.AnyAsync(t =>
                     t.TakipciId == user.Id && t.TakipEdilenId == mekan.SahibiId);
+
+            kullaniciListeleri = await _db.MekanListeleri
+                .Include(l => l.Mekanlar)
+                .Where(l => l.OlusturanId == user.Id)
+                .OrderByDescending(l => l.Olusturuldu)
+                .ToListAsync();
         }
 
         var now = DateTime.UtcNow;
@@ -71,7 +78,8 @@ public class MekanController : Controller
             KullaniciBegendigi = kullaniciBegendigi,
             TakipEdiyor = takipEdiyor,
             AktifKampanyalar = aktifKampanyalar,
-            BugunNo = ((int)DateTime.Now.DayOfWeek + 6) % 7
+            BugunNo = ((int)DateTime.Now.DayOfWeek + 6) % 7,
+            KullaniciListeleri = kullaniciListeleri
         });
     }
 

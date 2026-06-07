@@ -68,6 +68,7 @@ public class MekanDetayViewModel
     public bool TakipEdiyor { get; set; }
     public List<Kampanya> AktifKampanyalar { get; set; } = new();
     public int BugunNo { get; set; }
+    public List<MekanListesi> KullaniciListeleri { get; set; } = new();
 }
 
 public class YorumFormModel

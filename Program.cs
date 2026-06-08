@@ -13,8 +13,13 @@ builder.WebHost.UseUrls($"http://+:{port}");
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (!string.IsNullOrEmpty(databaseUrl))
 {
+    // Railway: postgresql://user:pass@host:port/db → Npgsql key-value formatına çevir
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var connStr = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+
     builder.Services.AddDbContext<AppDbContext>(opt =>
-        opt.UseNpgsql(databaseUrl, npgsql =>
+        opt.UseNpgsql(connStr, npgsql =>
             npgsql.EnableRetryOnFailure(maxRetryCount: 3)));
 }
 else

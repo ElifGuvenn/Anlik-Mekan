@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using AnlikMekanCore.Models;
 using AnlikMekanCore.Services;
 
+// Npgsql 6+: DateTime.Kind=Unspecified değerlerini timestamptz sütununa yazmayı etkinleştir
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Render (ve benzeri) PORT env değişkenini okuyarak dinleme portunu ayarla

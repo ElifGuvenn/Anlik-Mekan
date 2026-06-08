@@ -183,9 +183,24 @@ public class HomeController : Controller
             return Json(new { sonuclar = Array.Empty<object>() });
 
         var user = await _userManager.GetUserAsync(User);
-        var qLower = q.ToLower();
-        var qs = _db.Mekanlar.Where(m => m.IsApproved &&
-            (m.Ad.ToLower().Contains(qLower) || m.Adres.ToLower().Contains(qLower) || (m.Sehir != null && m.Sehir.ToLower().Contains(qLower))));
+        var pattern = $"%{q}%";
+        var isPostgres = _db.Database.ProviderName?.Contains("Npgsql") == true;
+        IQueryable<Mekan> qs;
+        if (isPostgres)
+        {
+            qs = _db.Mekanlar.Where(m => m.IsApproved &&
+                (EF.Functions.ILike(m.Ad, pattern) ||
+                 EF.Functions.ILike(m.Adres, pattern) ||
+                 (m.Sehir != null && EF.Functions.ILike(m.Sehir, pattern))));
+        }
+        else
+        {
+            var qLower = q.ToLower();
+            qs = _db.Mekanlar.Where(m => m.IsApproved &&
+                (m.Ad.ToLower().Contains(qLower) ||
+                 m.Adres.ToLower().Contains(qLower) ||
+                 (m.Sehir != null && m.Sehir.ToLower().Contains(qLower))));
+        }
 
         if (filtre == "calisma")
             qs = qs.Where(m => m.Kategori == "KUTUPHANE" || m.CalismaAlaniVar);

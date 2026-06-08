@@ -122,6 +122,13 @@ var app = builder.Build();
 
 app.UseStaticFiles();
 app.UseSession();
+
+// datetime-local ve sayısal değerlerin parse edilebilmesi için InvariantCulture kullan
+app.UseRequestLocalization(new RequestLocalizationOptions()
+    .SetDefaultCulture("en-US")
+    .AddSupportedCultures("en-US", "tr-TR")
+    .AddSupportedUICultures("tr-TR"));
+
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

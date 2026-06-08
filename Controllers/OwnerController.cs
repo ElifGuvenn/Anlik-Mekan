@@ -317,7 +317,7 @@ public class OwnerController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> KampanyaOlustur(int mekanId, string baslik, string aciklama,
-        DateTime baslangic, DateTime bitis, IFormFile? foto)
+        string baslangic, string bitis, IFormFile? foto)
     {
         var user = await GetOwnerAsync();
         if (user == null) return RedirectToAction("Dashboard", "Home");
@@ -325,12 +325,17 @@ public class OwnerController : Controller
         var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId == user.Id);
         if (mekan == null) return NotFound();
 
+        if (!DateTime.TryParse(baslangic, System.Globalization.CultureInfo.InvariantCulture, out var baslangicDt))
+            baslangicDt = DateTime.UtcNow;
+        if (!DateTime.TryParse(bitis, System.Globalization.CultureInfo.InvariantCulture, out var bitisDt))
+            bitisDt = DateTime.UtcNow.AddDays(7);
+
         var fotoUrl = foto != null ? await _cloudinary.YukleAsync(foto) : null;
 
         _db.Kampanyalar.Add(new Kampanya
         {
             MekanId = mekanId, Baslik = baslik, Aciklama = aciklama,
-            Baslangic = baslangic, Bitis = bitis, FotoUrl = fotoUrl
+            Baslangic = baslangicDt, Bitis = bitisDt, FotoUrl = fotoUrl
         });
         await _db.SaveChangesAsync();
 
@@ -376,7 +381,7 @@ public class OwnerController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EtkinlikOlustur(int mekanId, string baslik, string? aciklama,
-        DateTime baslangic, DateTime bitis, IFormFile? foto)
+        string baslangic, string bitis, IFormFile? foto)
     {
         var user = await GetOwnerAsync();
         if (user == null) return RedirectToAction("Dashboard", "Home");
@@ -384,12 +389,15 @@ public class OwnerController : Controller
         var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId == user.Id);
         if (mekan == null) return NotFound();
 
+        DateTime.TryParse(baslangic, System.Globalization.CultureInfo.InvariantCulture, out var baslangicDt);
+        DateTime.TryParse(bitis, System.Globalization.CultureInfo.InvariantCulture, out var bitisDt);
+
         var fotoUrl = foto != null ? await _cloudinary.YukleAsync(foto) : null;
 
         _db.Etkinlikler.Add(new Etkinlik
         {
             MekanId = mekanId, Baslik = baslik, Aciklama = aciklama ?? "",
-            Baslangic = baslangic, Bitis = bitis, FotoUrl = fotoUrl
+            Baslangic = baslangicDt, Bitis = bitisDt, FotoUrl = fotoUrl
         });
         await _db.SaveChangesAsync();
 
@@ -412,7 +420,7 @@ public class OwnerController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EtkinlikDuzenle(int id, string baslik, string? aciklama,
-        DateTime baslangic, DateTime bitis, IFormFile? foto)
+        string baslangic, string bitis, IFormFile? foto)
     {
         var user = await GetOwnerAsync();
         if (user == null) return RedirectToAction("Dashboard", "Home");
@@ -420,10 +428,13 @@ public class OwnerController : Controller
             .FirstOrDefaultAsync(e => e.Id == id && e.Mekan.SahibiId == user.Id);
         if (e == null) return NotFound();
 
+        DateTime.TryParse(baslangic, System.Globalization.CultureInfo.InvariantCulture, out var baslangicDt);
+        DateTime.TryParse(bitis, System.Globalization.CultureInfo.InvariantCulture, out var bitisDt);
+
         e.Baslik = baslik;
         e.Aciklama = aciklama ?? "";
-        e.Baslangic = baslangic;
-        e.Bitis = bitis;
+        e.Baslangic = baslangicDt;
+        e.Bitis = bitisDt;
         if (foto != null)
             e.FotoUrl = await _cloudinary.YukleAsync(foto);
 

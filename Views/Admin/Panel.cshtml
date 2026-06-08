@@ -42,7 +42,10 @@
                 </div>
             </div>
             <div class="kart-aksiyonlar">
-                <a href="@Url.Action("Detay","Mekan", new {id=m.Id})" style="padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;">Önizle</a>
+                @if (!string.IsNullOrEmpty(m.RuhsatBelgesiUrl))
+                {
+                    <a href="@m.RuhsatBelgesiUrl" target="_blank" style="padding:8px 14px;border:1.5px solid #2563eb;color:#2563eb;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">📄 Ruhsatı Görüntüle</a>
+                }
                 <form asp-action="Onayla" asp-controller="Admin" method="post" style="display:inline">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="mekanId" value="@m.Id">

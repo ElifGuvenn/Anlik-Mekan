@@ -2,7 +2,7 @@
 @{ ViewData["Title"] = Model.Ad; }
 
 <style>
-.detay-wrap { max-width: 800px; margin: 0 auto; padding: 28px 5%; }
+.detay-wrap { max-width: 800px; margin: 0 auto; padding: 28px 5% 80px; }
 .liste-hero { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; }
 .liste-ad { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
 .liste-meta { font-size: 14px; color: var(--muted); }
@@ -12,7 +12,19 @@
 .kart-bilgi { flex: 1; }
 .kart-ad { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
 .kart-meta { font-size: 12px; color: var(--muted); }
-.btn-cikar { padding: 6px 12px; background: #fff5f5; border: 1.5px solid #fca5a5; border-radius: 7px; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; font-family: inherit; }
+.btn-cikar { padding: 6px 12px; background: #fff5f5; border: 1.5px solid #fca5a5; border-radius: 7px; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; font-family: inherit; flex-shrink:0; }
+.ekle-kutu { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 24px; }
+.ekle-kutu h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; display:flex; align-items:center; gap:7px; }
+.ekle-input-wrap { position: relative; }
+.ekle-input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); box-sizing: border-box; }
+.ekle-input:focus { outline: none; border-color: var(--primary); }
+.ekle-sonuclar { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 200; max-height: 280px; overflow-y: auto; display: none; }
+.ekle-sonuc-item { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--border); gap: 10px; }
+.ekle-sonuc-item:last-child { border-bottom: none; }
+.ekle-sonuc-ad { font-size: 14px; font-weight: 600; }
+.ekle-sonuc-meta { font-size: 12px; color: var(--muted); }
+.btn-ekle { padding: 5px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+.btn-ekle:disabled { background: #94a3b8; cursor: default; }
 </style>
 
 <div class="detay-wrap">
@@ -21,43 +33,134 @@
     </div>
 
     <div class="liste-hero">
-        <div class="liste-ad">📋 @Model.Ad</div>
+        <div class="liste-ad"><span class="ic"><i data-lucide="list"></i></span> @Model.Ad</div>
         <div class="liste-meta">
-            @Model.Mekanlar.Count mekan
+            <span id="mekan-sayac">@Model.Mekanlar.Count</span> mekan
             · @(Model.HerkesAcik ? "🌍 Herkese açık" : "🔒 Gizli")
         </div>
         @if (!string.IsNullOrEmpty(Model.Aciklama))
         { <div style="margin-top:10px;font-size:14px;">@Model.Aciklama</div> }
     </div>
 
-    @if (!Model.Mekanlar.Any())
-    {
-        <div style="text-align:center;padding:40px;color:var(--muted);">
-            <div style="font-size:36px;margin-bottom:10px;">🏗️</div>
-            <div>Bu listede henüz mekan yok.</div>
-            <a href="@Url.Action("Dashboard","Home")" class="btn btn-primary" style="margin-top:12px;display:inline-block;">Mekan Ekle</a>
+    <div class="ekle-kutu">
+        <h3><span class="ic"><i data-lucide="plus-circle"></i></span> Listeye Mekan Ekle</h3>
+        <div class="ekle-input-wrap">
+            <input type="text" id="ekle-ara" class="ekle-input" placeholder="Mekan adı, adres veya şehir ara..." autocomplete="off">
+            <div class="ekle-sonuclar" id="ekle-sonuclar"></div>
         </div>
-    }
+        <div id="ekle-mesaj" style="margin-top:8px;font-size:13px;font-weight:600;display:none;"></div>
+    </div>
 
-    @foreach (var m in Model.Mekanlar)
-    {
-        <div class="mekan-kart">
-            <div class="kart-ikon">
-                @if (!string.IsNullOrEmpty(m.ImgUrl)) { <img src="@m.ImgUrl" alt="@m.Ad"> }
-                else { <span>@(m.Kategori == "KAFE" ? "☕" : m.Kategori == "RESTORAN" ? "🍽️" : "📍")</span> }
+    <div id="mekan-listesi">
+        @if (!Model.Mekanlar.Any())
+        {
+            <div id="bos-mesaj" style="text-align:center;padding:40px;color:var(--muted);">
+                <div style="font-size:36px;margin-bottom:10px;">🏗️</div>
+                <div>Bu listede henüz mekan yok. Yukarıdan mekan ekleyebilirsin.</div>
             </div>
-            <div class="kart-bilgi">
-                <div class="kart-ad">
-                    <a href="@Url.Action("Detay","Mekan", new {id=m.Id})" style="color:var(--text);">@m.Ad</a>
+        }
+
+        @foreach (var m in Model.Mekanlar)
+        {
+            <div class="mekan-kart" id="kart-@m.Id">
+                <div class="kart-ikon">
+                    @if (!string.IsNullOrEmpty(m.ImgUrl)) { <img src="@m.ImgUrl" alt="@m.Ad"> }
+                    else { <span>@(m.Kategori == "KAFE" ? "☕" : m.Kategori == "RESTORAN" ? "🍽️" : "📍")</span> }
                 </div>
-                <div class="kart-meta">@m.KategoriAdi · @m.Sehir</div>
+                <div class="kart-bilgi">
+                    <div class="kart-ad">
+                        <a href="@Url.Action("Detay","Mekan", new {id=m.Id})" style="color:var(--text);">@m.Ad</a>
+                    </div>
+                    <div class="kart-meta">@m.KategoriAdi · @m.Sehir</div>
+                </div>
+                <form asp-action="MekanCikar" asp-controller="Liste" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="listeId" value="@Model.Id">
+                    <input type="hidden" name="mekanId" value="@m.Id">
+                    <button type="submit" class="btn-cikar">Çıkar</button>
+                </form>
             </div>
-            <form asp-action="MekanCikar" asp-controller="Liste" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="listeId" value="@Model.Id">
-                <input type="hidden" name="mekanId" value="@m.Id">
-                <button type="submit" class="btn-cikar">Çıkar</button>
-            </form>
-        </div>
-    }
+        }
+    </div>
 </div>
+
+@Html.AntiForgeryToken()
+
+<script>
+(function () {
+    var listeId = @Model.Id;
+    var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+    var input = document.getElementById('ekle-ara');
+    var dropdown = document.getElementById('ekle-sonuclar');
+    var mesajEl = document.getElementById('ekle-mesaj');
+    var katAdi = { KAFE: 'Kafe', KUTUPHANE: 'Kütüphane', ECZANE: 'Eczane', RESTORAN: 'Restoran', PUB: 'Pub' };
+    var timer;
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        var q = this.value.trim();
+        if (!q) { dropdown.style.display = 'none'; return; }
+        timer = setTimeout(function () {
+            fetch('/Home/AramaApi?q=' + encodeURIComponent(q))
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (!d.sonuclar || !d.sonuclar.length) {
+                        dropdown.innerHTML = '<div style="padding:12px;font-size:13px;color:var(--muted);text-align:center">Sonuç bulunamadı</div>';
+                        dropdown.style.display = 'block';
+                        return;
+                    }
+                    dropdown.innerHTML = d.sonuclar.map(function (m) {
+                        return '<div class="ekle-sonuc-item">'
+                            + '<div><div class="ekle-sonuc-ad">' + escHtml(m.ad) + '</div>'
+                            + '<div class="ekle-sonuc-meta">' + (katAdi[m.kategori] || m.kategori) + (m.sehir ? ' · ' + m.sehir : '') + '</div></div>'
+                            + '<button class="btn-ekle" onclick="mekanEkle(' + m.id + ', this)">+ Ekle</button>'
+                            + '</div>';
+                    }).join('');
+                    dropdown.style.display = 'block';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                })
+                .catch(function () { dropdown.style.display = 'none'; });
+        }, 200);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!input.contains(e.target) && !dropdown.contains(e.target))
+            dropdown.style.display = 'none';
+    });
+
+    window.mekanEkle = function (mekanId, btn) {
+        btn.disabled = true;
+        btn.textContent = '...';
+        fetch('/Liste/MekanEkle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'listeId=' + listeId + '&mekanId=' + mekanId + '&__RequestVerificationToken=' + encodeURIComponent(token)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            dropdown.style.display = 'none';
+            input.value = '';
+            if (data.ok) {
+                btn.textContent = '✓ Eklendi';
+                mesajEl.style.color = '#059669';
+                mesajEl.textContent = data.mesaj;
+                mesajEl.style.display = 'block';
+                setTimeout(function () { mesajEl.style.display = 'none'; }, 3000);
+                // Sayfayı yenile ki yeni kart görünsün
+                setTimeout(function () { location.reload(); }, 600);
+            } else {
+                btn.disabled = false;
+                btn.textContent = '+ Ekle';
+                mesajEl.style.color = '#dc2626';
+                mesajEl.textContent = data.mesaj || 'Eklenemedi.';
+                mesajEl.style.display = 'block';
+            }
+        })
+        .catch(function () { btn.disabled = false; btn.textContent = '+ Ekle'; });
+    };
+
+    function escHtml(s) {
+        return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+    }
+})();
+</script>

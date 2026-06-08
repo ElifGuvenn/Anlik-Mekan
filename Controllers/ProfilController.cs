@@ -13,12 +13,14 @@ public class ProfilController : Controller
 {
     private readonly AppDbContext _db;
     private readonly UserManager<AppUser> _userManager;
+    private readonly SignInManager<AppUser> _signInManager;
     private readonly CloudinaryService _cloudinary;
 
-    public ProfilController(AppDbContext db, UserManager<AppUser> userManager, CloudinaryService cloudinary)
+    public ProfilController(AppDbContext db, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, CloudinaryService cloudinary)
     {
         _db = db;
         _userManager = userManager;
+        _signInManager = signInManager;
         _cloudinary = cloudinary;
     }
 
@@ -67,6 +69,7 @@ public class ProfilController : Controller
             {
                 user.FotoUrl = url;
                 await _userManager.UpdateAsync(user);
+                await _signInManager.RefreshSignInAsync(user);
                 TempData["Mesaj"] = "Profil fotoğrafı güncellendi.";
             }
         }

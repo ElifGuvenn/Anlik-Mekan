@@ -9,12 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://+:{port}");
 
-// Veritabanı: DATABASE_URL varsa PostgreSQL (Render), yoksa SQLite (lokal)
+// Veritabanı: DATABASE_URL varsa PostgreSQL (Railway), yoksa SQLite (lokal)
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (!string.IsNullOrEmpty(databaseUrl))
 {
     builder.Services.AddDbContext<AppDbContext>(opt =>
-        opt.UseNpgsql(databaseUrl));
+        opt.UseNpgsql(databaseUrl, npgsql =>
+            npgsql.EnableRetryOnFailure(maxRetryCount: 3)));
 }
 else
 {
@@ -124,4 +125,4 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Landing}/{id?}");
 
-app.Run($"http://+:{port}");
+app.Run();

@@ -116,6 +116,7 @@ public class MekanFormModel
 
     public IFormFile? Img { get; set; }
     public IFormFile? RuhsatBelgesi { get; set; }
+    public string? MevcutImgUrl { get; set; }
 }
 
 public class HaritaMekanJson

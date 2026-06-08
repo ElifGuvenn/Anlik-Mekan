@@ -1,0 +1,66 @@
+@{ ViewData["Title"] = "Etkinlik Ekle"; }
+
+<style>
+.form-wrap { max-width: 640px; margin: 0 auto; padding: 36px 24px 80px; }
+.form-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.form-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+.form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+.f-group { margin-bottom: 16px; }
+.f-label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.f-input { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; background: var(--bg); color: var(--text); box-sizing: border-box; }
+.f-input:focus { outline: none; border-color: var(--primary); }
+.form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-submit { background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-submit:hover { opacity: .9; }
+.btn-cancel { display: inline-block; padding: 10px 22px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--text); text-decoration: none; }
+.btn-cancel:hover { background: var(--surface); }
+.form-actions { display: flex; gap: 10px; margin-top: 4px; }
+.btn-back { display: inline-block; font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+.btn-back:hover { color: var(--text); }
+.venue-badge { display: inline-block; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 700; color: #1d4ed8; margin-bottom: 18px; }
+</style>
+
+<div class="form-wrap">
+    <a href="@Url.Action("Dashboard","Owner")" class="btn-back">← Panele Geri Dön</a>
+    <div class="form-title">Etkinlik Ekle</div>
+    <p class="form-subtitle">Yeni etkinlik oluştur</p>
+    <div class="venue-badge">@ViewBag.MekanAd</div>
+
+    <div class="form-card">
+        <form asp-action="EtkinlikOlustur" asp-controller="Owner" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="mekanId" value="@ViewBag.MekanId">
+
+            <div class="f-group">
+                <label class="f-label">Etkinlik Başlığı *</label>
+                <input name="baslik" class="f-input" placeholder="Etkinlik adı" required>
+            </div>
+
+            <div class="f-group">
+                <label class="f-label">Açıklama</label>
+                <textarea name="aciklama" class="f-input" rows="3" placeholder="Etkinlik hakkında kısa bilgi (isteğe bağlı)"></textarea>
+            </div>
+
+            <div class="f-group form-row2">
+                <div>
+                    <label class="f-label">Başlangıç *</label>
+                    <input type="datetime-local" name="baslangic" class="f-input" required>
+                </div>
+                <div>
+                    <label class="f-label">Bitiş *</label>
+                    <input type="datetime-local" name="bitis" class="f-input" required>
+                </div>
+            </div>
+
+            <div class="f-group">
+                <label class="f-label">Fotoğraf</label>
+                <input type="file" name="foto" accept="image/*" class="f-input" style="padding:6px;">
+            </div>
+
+            <div class="form-actions">
+                <a href="@Url.Action("Dashboard","Owner")" class="btn-cancel">İptal</a>
+                <button type="submit" class="btn-submit">+ Etkinlik Ekle</button>
+            </div>
+        </form>
+    </div>
+</div>

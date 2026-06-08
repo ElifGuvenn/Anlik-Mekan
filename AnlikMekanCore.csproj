@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- initial_data.json publish çıktısına dahil et -->
-    <Content Include="Data\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Content Remove="Data/**/*" />
+    <None Include="Data/**/*" CopyToPublishDirectory="PreserveNewest" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

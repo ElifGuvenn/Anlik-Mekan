@@ -3,28 +3,40 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <style>
-.panel-wrap { max-width: 1060px; margin: 0 auto; padding: 36px 5% 80px; }
-.panel-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
-.panel-top h1 { font-size: 22px; font-weight: 800; margin-bottom: 2px; }
-.panel-top p  { font-size: 13px; color: var(--muted); }
-.btn-new { background: var(--primary); color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; display: inline-block; white-space: nowrap; }
-.btn-new:hover { opacity: .9; color: white; }
-.alert-ok { background:#dcfce7;border:1px solid #bbf7d0;color:#15803d; padding:11px 16px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px; }
+.panel-wrap { max-width: 1060px; margin: 0 auto; padding: 36px 24px 80px; }
 
-/* Venue Panel Card */
+.panel-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 14px; }
+.panel-top-text h1 { font-size: 22px; font-weight: 800; letter-spacing: -.3px; margin-bottom: 2px; }
+.panel-top-text p  { font-size: 13px; color: var(--muted); }
+.btn-new { background: var(--primary); color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; transition: .15s; display: inline-block; white-space: nowrap; }
+.btn-new:hover { background: var(--primary-dark); color: white; }
+
+.alert { padding: 11px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+.alert-success { background: #dcfce7; border: 1px solid #bbf7d0; color: #15803d; }
+.alert-error   { background: #fee2e2; border: 1px solid #fecaca; color: #dc2626; }
+
+.verify-banner {
+    background: #fffbeb; border: 1px solid #fcd34d; border-left: 4px solid #f59e0b;
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.verify-banner-text { font-size: 13px; font-weight: 600; color: #92400e; line-height: 1.5; }
+.verify-banner-text small { display: block; font-weight: 500; color: #b45309; font-size: 12px; }
+
+/* Kart */
 .vpc { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 24px; overflow: hidden; }
+
 .vpc-hd { display: flex; align-items: center; gap: 16px; padding: 20px 22px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-.vpc-thumb { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.vpc-thumb { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+.vpc-thumb-ph { width: 60px; height: 60px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); flex-shrink: 0; }
 .vpc-hd-info { flex: 1; min-width: 0; }
-.vpc-hd-name { font-size: 16px; font-weight: 800; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vpc-hd-name { font-size: 16px; font-weight: 800; letter-spacing: -.2px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vpc-hd-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .badge-ver  { background: #dcfce7; color: #15803d; padding: 1px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; }
 .badge-pend { background: #fef9c3; color: #a16207; padding: 1px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; }
-.btn-edit-v { background: var(--primary); color: white; padding: 9px 16px; border-radius: 7px; font-size: 13px; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
-.btn-edit-v:hover { opacity: .9; color: white; }
 
-/* Kontrol Çubuğu */
-.vpc-ctrl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 22px; background: var(--bg); border-bottom: 1px solid var(--border); }
+/* Kontroller */
+.vpc-ctrl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 22px; background: var(--bg); border-bottom: 1px solid var(--border); }
 .toggle-btn { padding: 7px 16px; border-radius: 6px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s; }
 .is-open   { background: #dcfce7; color: #15803d; }
 .is-closed { background: var(--surface); color: var(--muted); border: 1.5px solid var(--border); }
@@ -34,54 +46,46 @@
 .duyuru-grp { display: flex; gap: 6px; flex: 1; min-width: 200px; }
 .duyuru-inp { flex: 1; padding: 7px 11px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 13px; font-family: inherit; background: var(--bg); color: var(--text); }
 .duyuru-inp:focus { outline: none; border-color: var(--primary); }
-.duyuru-btn { background: #0f172a; color: white; border: none; padding: 7px 13px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.duyuru-btn { background: #0f172a; color: white; border: none; padding: 7px 13px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s; white-space: nowrap; }
+.duyuru-btn:hover { background: #1e293b; }
 
 /* Sekmeler */
 .vpc-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 22px; gap: 2px; overflow-x: auto; }
 .tab-btn { padding: 10px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; background: none; color: var(--muted); border-bottom: 2px solid transparent; font-family: inherit; transition: .15s; white-space: nowrap; }
 .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
 .tab-pane { padding: 20px 22px; display: none; }
 .tab-pane.active { display: block; }
 
 /* Etkinlik listesi */
 .event-list { display: flex; flex-direction: column; gap: 8px; }
 .event-row { display: flex; gap: 12px; align-items: flex-start; background: var(--bg); border-radius: 10px; padding: 12px; }
-.event-row-ph { width: 48px; height: 48px; border-radius: 7px; background: #e2e8f0; flex-shrink: 0; }
 .event-row-img { width: 48px; height: 48px; border-radius: 7px; object-fit: cover; flex-shrink: 0; }
+.event-row-ph { width: 48px; height: 48px; border-radius: 7px; background: #e2e8f0; flex-shrink: 0; }
 .event-row-info { flex: 1; }
 .event-row-info strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
 .event-row-info small { font-size: 11px; color: var(--muted); }
 .event-row-actions { display: flex; gap: 6px; flex-shrink: 0; align-self: center; }
-
-/* Butonlar */
-.btn-add { display: inline-block; background: var(--primary); color: white; padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 700; margin-bottom: 14px; }
-.btn-add:hover { opacity: .9; color: white; }
 .btn-xs { padding: 5px 11px; border-radius: 5px; font-size: 11px; font-weight: 700; font-family: inherit; border: none; cursor: pointer; transition: .15s; text-decoration: none; display: inline-block; }
 .btn-xs-edit { background: #eff6ff; color: var(--primary); }
 .btn-xs-edit:hover { background: #dbeafe; }
 .btn-xs-del  { background: #fef2f2; color: var(--danger); }
 .btn-xs-del:hover  { background: #fee2e2; }
 
-/* Info tablo */
+.btn-add { display: inline-block; background: var(--primary); color: white; padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 700; margin-bottom: 14px; }
+.btn-add:hover { opacity: .9; color: white; }
+
+/* Bilgi tablosu */
 .info-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-.info-tbl td { padding: 7px 0; vertical-align: top; border-bottom: 1px solid var(--border); }
+.info-tbl td { padding: 7px 0; vertical-align: top; }
 .info-tbl td:first-child { color: var(--muted); width: 130px; font-weight: 600; font-size: 12px; }
 
-/* Rez tablo */
-.rez-tablo { width: 100%; border-collapse: collapse; font-size: 13px; }
-.rez-tablo th { font-size: 11px; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 8px 10px; text-align: left; border-bottom: 2px solid var(--border); }
-.rez-tablo td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
-
-/* Alt bar */
+/* Alt butonlar */
 .vpc-ft { display: flex; gap: 8px; padding: 14px 22px; border-top: 1px solid var(--border); }
-.btn-del-v { background: white; color: var(--danger); border: 1.5px solid #fca5a5; padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-edit-v { background: var(--primary); color: white; padding: 9px 18px; border-radius: 7px; font-size: 13px; font-weight: 700; transition: .15s; }
+.btn-edit-v:hover { opacity: .9; color: white; }
+.btn-del-v { background: white; color: var(--danger); border: 1.5px solid #fca5a5; padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: .15s; }
 .btn-del-v:hover { background: #fef2f2; }
-
-/* Etkinlik form */
-.etkinlik-form { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-.f-input { width: 100%; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 7px; font-family: inherit; font-size: 13px; background: var(--surface); color: var(--text); box-sizing: border-box; }
-.f-input:focus { outline: none; border-color: var(--primary); }
-.form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
 
 /* Boş */
 .empty-panel { text-align: center; padding: 80px 20px; }
@@ -92,14 +96,33 @@
 <div class="panel-wrap">
 
     @if (TempData["Mesaj"] != null)
-    { <div class="alert-ok">✓ @TempData["Mesaj"]</div> }
+    { <div class="alert alert-success">@TempData["Mesaj"]</div> }
+    @if (TempData["Hata"] != null)
+    { <div class="alert alert-error">@TempData["Hata"]</div> }
+
+    @if (!(bool)ViewBag.TwoFaDogrulandi)
+    {
+        <div class="verify-banner">
+            <div class="verify-banner-text">
+                🔒 Hesabınız henüz 2FA ile doğrulanmadı — mekan ekleyemezsiniz.
+                <small><a href="@Url.Action("QrKodOlustur","Auth")" style="color:#b45309;font-weight:700;">Doğrulama sayfasına gidin</a></small>
+            </div>
+        </div>
+    }
 
     <div class="panel-top">
-        <div>
+        <div class="panel-top-text">
             <h1>Yönetim Paneli</h1>
-            <p>Mekanlarını buradan yönet.</p>
+            <p>Merhaba, @ViewBag.UserName. Mekanlarını buradan yönet.</p>
         </div>
-        <a href="@Url.Action("MekanOlustur","Owner")" class="btn-new">+ Yeni Mekan Ekle</a>
+        @if ((bool)ViewBag.TwoFaDogrulandi)
+        {
+            <a href="@Url.Action("MekanOlustur","Owner")" class="btn-new">+ Yeni Mekan Ekle</a>
+        }
+        else
+        {
+            <span class="btn-new" style="opacity:.45;cursor:not-allowed;" title="Önce 2FA doğrulamanızı tamamlayın">+ Yeni Mekan Ekle</span>
+        }
     </div>
 
     @if (!Model.Any())
@@ -115,24 +138,22 @@
     {
         <div class="vpc">
 
-            <!-- Başlık -->
             <div class="vpc-hd">
-                <div class="vpc-thumb">
-                    @if (!string.IsNullOrEmpty(m.ImgUrl))
-                    { <img src="@m.ImgUrl" style="width:100%;height:100%;object-fit:cover;border-radius:10px;"> }
-                    else { <span>@(m.Kategori == "KAFE" ? "☕" : m.Kategori == "RESTORAN" ? "🍽️" : m.Kategori == "KUTUPHANE" ? "📚" : "📍")</span> }
-                </div>
+                @if (!string.IsNullOrEmpty(m.ImgUrl))
+                { <img src="@m.ImgUrl" class="vpc-thumb" alt=""> }
+                else
+                { <div class="vpc-thumb-ph"></div> }
                 <div class="vpc-hd-info">
                     <div class="vpc-hd-name">@m.Ad</div>
                     <div class="vpc-hd-meta">
-                        @m.KategoriAdi · @m.Adres?.Length > 40 ? m.Adres?.Substring(0, 40) + "…" : m.Adres
+                        @m.KategoriAdi · @(m.Adres?.Length > 40 ? m.Adres.Substring(0,40) + "…" : m.Adres)
                         @if (m.IsApproved)
                         { <span class="badge-ver">Onaylandı — Sitede Aktif</span> }
                         else
                         { <span class="badge-pend">Onay Bekliyor</span> }
                     </div>
                 </div>
-                <a href="@Url.Action("MekanDuzenle","Owner", new {id=m.Id})" class="btn-edit-v">Bilgileri Güncelle</a>
+                <a href="@Url.Action("MekanDuzenle","Owner", new {id=m.Id})" class="btn-edit-v" style="flex-shrink:0;">Bilgileri Güncelle</a>
             </div>
 
             @if (!m.IsApproved)
@@ -142,7 +163,6 @@
                 </div>
             }
 
-            <!-- Kontrol Çubuğu -->
             <div class="vpc-ctrl">
                 <button class="toggle-btn @(m.SuAnAcik ? "is-open" : "is-closed")"
                     onclick="toggleAcik(this, @m.Id)">
@@ -163,43 +183,21 @@
                 </div>
             </div>
 
-            <!-- Sekmeler -->
             <div class="vpc-tabs">
-                <button class="tab-btn active" onclick="sekmeAc(event,'tab-e-@m.Id')">📅 Etkinlikler</button>
-                <button class="tab-btn" onclick="sekmeAc(event,'tab-b-@m.Id')">ℹ️ Mekan Bilgisi</button>
-                <button class="tab-btn" onclick="sekmeAc(event,'tab-g-@m.Id')">📷 Galeri</button>
-                <button class="tab-btn" onclick="sekmeAc(event,'tab-rez-@m.Id')">📆 Rezervasyonlar</button>
-                <button class="tab-btn" onclick="sekmeAc(event,'tab-kamp-@m.Id')">🏷 Kampanyalar</button>
+                <button class="tab-btn active" onclick="sekmeAc(event, 'tab-e-@m.Id')">Etkinlikler</button>
+                <button class="tab-btn" onclick="sekmeAc(event, 'tab-b-@m.Id')">Mekan Bilgisi</button>
+                <button class="tab-btn" onclick="sekmeAc(event, 'tab-g-@m.Id')">📷 Galeri</button>
+                <button class="tab-btn" onclick="sekmeAc(event, 'tab-rez-@m.Id')">📅 Rezervasyonlar</button>
+                <button class="tab-btn" onclick="sekmeAc(event, 'tab-kamp-@m.Id')">🏷 Kampanyalar</button>
                 @if (m.Kategori != "ECZANE" && m.Kategori != "KUTUPHANE")
-                { <button class="tab-btn" onclick="sekmeAc(event,'tab-menu-@m.Id')">📋 Menü</button> }
-                <button class="tab-btn" onclick="sekmeAc(event,'tab-cs-@m.Id')">🕐 Çalışma Saatleri</button>
-                <button class="tab-btn" onclick="sekmeAc(event,'tab-s-@m.Id')">📊 İstatistik</button>
+                { <button class="tab-btn" onclick="sekmeAc(event, 'tab-menu-@m.Id')">📋 Menü</button> }
+                <button class="tab-btn" onclick="sekmeAc(event, 'tab-cs-@m.Id')">🕐 Çalışma Saatleri</button>
+                <button class="tab-btn" onclick="sekmeAc(event, 'tab-s-@m.Id')">📊 İstatistik</button>
             </div>
 
             <!-- Etkinlikler -->
             <div id="tab-e-@m.Id" class="tab-pane active">
-                <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Yeni Etkinlik Ekle</div>
-                <form asp-action="EtkinlikOlustur" asp-controller="Owner" method="post" enctype="multipart/form-data" class="etkinlik-form">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="mekanId" value="@m.Id">
-                    <div class="form-row2">
-                        <input name="baslik" class="f-input" placeholder="Etkinlik başlığı" required>
-                        <input type="file" name="foto" accept="image/*" class="f-input" style="padding:5px;">
-                    </div>
-                    <textarea name="aciklama" class="f-input" rows="2" placeholder="Açıklama (isteğe bağlı)" style="margin-bottom:10px;"></textarea>
-                    <div class="form-row2">
-                        <div>
-                            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;">Başlangıç</div>
-                            <input type="datetime-local" name="baslangic" class="f-input" required>
-                        </div>
-                        <div>
-                            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;">Bitiş</div>
-                            <input type="datetime-local" name="bitis" class="f-input" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-add" style="margin:8px 0 0;width:100%;text-align:center;">+ Etkinlik Ekle</button>
-                </form>
-
+                <a href="@Url.Action("EtkinlikOlustur","Owner", new {mekanId=m.Id})" class="btn-add">+ Etkinlik Ekle</a>
                 @{ var aktifEtkinlikler = m.Etkinlikler.Where(e => e.Bitis >= DateTime.UtcNow).OrderBy(e => e.Baslangic).ToList(); }
                 @if (aktifEtkinlikler.Any())
                 {
@@ -216,6 +214,7 @@
                                     <small>@e.Baslangic.ToString("dd MMM yyyy HH:mm") – @e.Bitis.ToString("HH:mm")</small>
                                 </div>
                                 <div class="event-row-actions">
+                                    <a href="@Url.Action("EtkinlikDuzenle","Owner", new {id=e.Id})" class="btn-xs btn-xs-edit">Düzenle</a>
                                     <form asp-action="EtkinlikSil" asp-controller="Owner" method="post" style="display:inline"
                                           onsubmit="return confirm('Etkinlik silinsin mi?')">
                                         @Html.AntiForgeryToken()
@@ -239,9 +238,7 @@
                     @if (m.AcilisSaati.HasValue) { <tr><td>Saatler</td><td>@m.AcilisSaati.Value.ToString("HH:mm") – @m.KapanisSaati?.ToString("HH:mm")</td></tr> }
                     <tr><td>Doluluk</td><td>%@(m.DolulukOrani ?? 0)</td></tr>
                     @if (!string.IsNullOrEmpty(m.RuhsatBelgesiUrl))
-                    {
-                        <tr><td>Ruhsat</td><td><a href="@m.RuhsatBelgesiUrl" target="_blank" style="color:var(--primary);font-weight:600;">Ruhsatı görüntüle</a></td></tr>
-                    }
+                    { <tr><td>Ruhsat</td><td><a href="@m.RuhsatBelgesiUrl" target="_blank" style="color:var(--primary);font-weight:600;">Ruhsatı görüntüle</a></td></tr> }
                     <tr>
                         <td>Olanaklar</td>
                         <td style="display:flex;flex-wrap:wrap;gap:5px;padding-top:4px;">
@@ -280,14 +277,14 @@
                                       onsubmit="return confirm('Fotoğraf silinsin mi?')">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="fotoId" value="@f.Id">
-                                    <button type="submit" style="background:rgba(220,38,38,.85);color:white;border:none;border-radius:5px;width:24px;height:24px;font-size:12px;cursor:pointer;">✕</button>
+                                    <button type="submit" style="background:rgba(220,38,38,.85);color:white;border:none;border-radius:5px;width:24px;height:24px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
                                 </form>
                             </div>
                         }
                     </div>
                 }
                 else
-                { <p style="font-size:13px;color:var(--muted);">Henüz ek fotoğraf yok.</p> }
+                { <p style="font-size:13px;color:var(--muted);">Henüz ek fotoğraf yok. Yukarıdan yükleyebilirsin.</p> }
             </div>
 
             <!-- Rezervasyonlar -->
@@ -296,34 +293,40 @@
                 @if (tumRez.Any())
                 {
                     <div style="margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;">
-                        <button onclick="rezFiltre(this,'BEKLIYOR','@m.Id')" class="btn-xs btn-xs-edit rez-filtre-btn" data-mekan="@m.Id" style="background:var(--primary);color:white;">Bekleyenler</button>
-                        <button onclick="rezFiltre(this,'TUMU','@m.Id')" class="btn-xs rez-filtre-btn" data-mekan="@m.Id" style="background:var(--surface);border:1px solid var(--border);">Tümü</button>
+                        <button onclick="rezFiltre(this,'BEKLIYOR','@m.Id')" class="btn-xs btn-xs-edit rez-filtre-btn active-filtre" data-mekan="@m.Id" style="font-size:11px;">Bekleyenler</button>
+                        <button onclick="rezFiltre(this,'TUMU','@m.Id')" class="btn-xs rez-filtre-btn" data-mekan="@m.Id" style="font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;font-family:inherit;">Tümü</button>
                     </div>
                     <div style="overflow-x:auto;">
-                        <table class="rez-tablo">
-                            <thead><tr>
-                                <th>Kullanıcı</th><th>Tarih / Saat</th><th>Kişi</th><th>Durum</th><th>İşlem</th>
-                            </tr></thead>
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <thead>
+                                <tr style="border-bottom:2px solid var(--border);">
+                                    <th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--muted);font-size:11px;">Kullanıcı</th>
+                                    <th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--muted);font-size:11px;">Tarih / Saat</th>
+                                    <th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--muted);font-size:11px;">Kişi</th>
+                                    <th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--muted);font-size:11px;">Durum</th>
+                                    <th style="padding:8px 10px;text-align:left;font-weight:700;color:var(--muted);font-size:11px;">İşlem</th>
+                                </tr>
+                            </thead>
                             <tbody>
                             @foreach (var r in tumRez)
                             {
-                                <tr data-durum="@r.Durum" class="rez-satir-@m.Id" style="border-bottom:1px solid var(--border);@(r.Durum != "BEKLIYOR" ? "display:none;" : "")">
-                                    <td style="font-weight:600;">@(r.Kullanici?.UserName ?? "—")</td>
-                                    <td>@r.Tarih.ToString("dd MMM yyyy") @r.Saat.ToString("HH:mm")</td>
-                                    <td>@r.KisiSayisi kişi</td>
-                                    <td>
-                                        @{
-                                            var rdCls = r.Durum switch { "BEKLIYOR" => "background:#fef9c3;color:#a16207", "ONAYLANDI" => "background:#dcfce7;color:#15803d", _ => "background:#fee2e2;color:#dc2626" };
-                                        }
-                                        <span style="@rdCls;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">@r.Durum</span>
+                                <tr style="border-bottom:1px solid var(--border);@(r.Durum != "BEKLIYOR" ? "display:none;" : "")" data-durum="@r.Durum" class="rez-satir-@m.Id">
+                                    <td style="padding:9px 10px;font-weight:600;">@(r.Kullanici?.UserName ?? "—")</td>
+                                    <td style="padding:9px 10px;">@r.Tarih.ToString("dd MMM yyyy") @r.Saat.ToString("HH:mm")</td>
+                                    <td style="padding:9px 10px;">@r.KisiSayisi</td>
+                                    <td style="padding:9px 10px;">
+                                        @if (r.Durum == "BEKLIYOR") { <span style="background:#fef9c3;color:#a16207;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">Bekliyor</span> }
+                                        else if (r.Durum == "ONAYLANDI") { <span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">Onaylandı</span> }
+                                        else if (r.Durum == "REDDEDILDI") { <span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">Reddedildi</span> }
+                                        else { <span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;">İptal</span> }
                                     </td>
-                                    <td>
+                                    <td style="padding:9px 10px;">
                                         @if (r.Durum == "BEKLIYOR")
                                         {
                                             <form asp-action="RezervasyonGuncelle" asp-controller="Owner" method="post" style="display:inline">
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="rezervasyonId" value="@r.Id">
-                                                <button name="durum" value="ONAYLANDI" class="btn-xs btn-xs-edit" style="margin-right:4px;">Onayla</button>
+                                                <button name="durum" value="ONAYLANDI" class="btn-xs btn-xs-edit">Onayla</button>
                                                 <button name="durum" value="REDDEDILDI" class="btn-xs btn-xs-del">Reddet</button>
                                             </form>
                                         }
@@ -354,45 +357,22 @@
 
             <!-- Kampanyalar -->
             <div id="tab-kamp-@m.Id" class="tab-pane">
-                <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Yeni Kampanya Ekle</div>
-                <form asp-action="KampanyaOlustur" asp-controller="Owner" method="post" enctype="multipart/form-data" class="etkinlik-form">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="mekanId" value="@m.Id">
-                    <div class="form-row2">
-                        <input name="baslik" class="f-input" placeholder="Kampanya başlığı" required>
-                        <input type="file" name="foto" accept="image/*" class="f-input" style="padding:5px;">
-                    </div>
-                    <textarea name="aciklama" class="f-input" rows="2" placeholder="Kampanya açıklaması" style="margin-bottom:10px;" required></textarea>
-                    <div class="form-row2">
-                        <div>
-                            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;">Başlangıç</div>
-                            <input type="datetime-local" name="baslangic" class="f-input" required>
-                        </div>
-                        <div>
-                            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px;">Bitiş</div>
-                            <input type="datetime-local" name="bitis" class="f-input" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-add" style="margin:8px 0 0;width:100%;text-align:center;">Kampanya Oluştur</button>
-                </form>
-
+                <a href="@Url.Action("KampanyaOlustur","Owner", new {mekanId=m.Id})" class="btn-add">+ Yeni Kampanya</a>
                 @{ var kampanyalar = m.Kampanyalar.OrderByDescending(k => k.Olusturuldu).ToList(); }
                 @if (kampanyalar.Any())
                 {
-                    <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
                         @foreach (var k in kampanyalar)
                         {
                             var aktifMi = k.Baslangic <= DateTime.UtcNow && DateTime.UtcNow <= k.Bitis;
                             var yakinda = DateTime.UtcNow < k.Baslangic;
-                            <div style="background:@(aktifMi?"#eff6ff":"var(--bg)");border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                            <div style="background:@(aktifMi ? "#eff6ff" : yakinda ? "#f0fdf4" : "var(--bg)");border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
                                 <div>
-                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-                                        <strong style="font-size:14px;">@k.Baslik</strong>
-                                        @if (aktifMi) { <span style="background:#dcfce7;color:#15803d;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;">AKTİF</span> }
-                                        else if (yakinda) { <span style="background:#eff6ff;color:#1d4ed8;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;">Yakında</span> }
-                                        else { <span style="background:#f1f5f9;color:#64748b;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;">Sona Erdi</span> }
-                                    </div>
+                                    <strong style="display:block;font-size:14px;margin-bottom:3px;">@k.Baslik</strong>
                                     <small style="font-size:11px;color:var(--muted);">@k.Baslangic.ToString("dd MMM yyyy HH:mm") – @k.Bitis.ToString("dd MMM yyyy HH:mm")</small>
+                                    @if (yakinda) { <span style="background:#dcfce7;color:#15803d;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-left:6px;">Yakında</span> }
+                                    else if (!aktifMi) { <span style="background:#f1f5f9;color:#64748b;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-left:6px;">Sona Erdi</span> }
+                                    else { <span style="background:#dcfce7;color:#15803d;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-left:6px;">Aktif</span> }
                                     <p style="font-size:12px;color:var(--muted);margin-top:4px;">@(k.Aciklama.Length > 80 ? k.Aciklama.Substring(0,80)+"…" : k.Aciklama)</p>
                                 </div>
                                 <form asp-action="KampanyaSil" asp-controller="Owner" method="post" style="flex-shrink:0"
@@ -419,13 +399,23 @@
                         <div style="margin-bottom:14px;">
                             <label style="display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Menü Fotoğrafı</label>
                             @if (!string.IsNullOrEmpty(m.MenuFotoUrl))
-                            { <img src="@m.MenuFotoUrl" style="max-width:200px;border-radius:8px;border:1px solid var(--border);display:block;margin-bottom:8px;" alt="Menü"> }
+                            {
+                                <img src="@m.MenuFotoUrl" style="max-width:200px;border-radius:8px;border:1px solid var(--border);display:block;margin-bottom:8px;" alt="Menü">
+                                <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#dc2626;margin-bottom:8px;cursor:pointer;">
+                                    <input type="checkbox" name="menu_foto_sil" value="1"> Fotoğrafı sil
+                                </label>
+                            }
                             <input type="file" name="menu_foto" accept="image/*" style="font-size:13px;width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);">
                         </div>
                         <div style="margin-bottom:14px;">
                             <label style="display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Menü PDF</label>
                             @if (!string.IsNullOrEmpty(m.MenuPdfUrl))
-                            { <a href="@m.MenuPdfUrl" target="_blank" style="font-size:13px;color:var(--primary);font-weight:600;display:block;margin-bottom:8px;">Mevcut PDF'i görüntüle</a> }
+                            {
+                                <a href="@m.MenuPdfUrl" target="_blank" style="font-size:13px;color:var(--primary);font-weight:600;display:block;margin-bottom:8px;">Mevcut PDF'i görüntüle</a>
+                                <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#dc2626;margin-bottom:8px;cursor:pointer;">
+                                    <input type="checkbox" name="menu_pdf_sil" value="1"> PDF'i sil
+                                </label>
+                            }
                             <input type="file" name="menu_pdf" accept="application/pdf" style="font-size:13px;width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);">
                         </div>
                         <button type="submit" class="btn-add" style="margin:0;">Menüyü Güncelle</button>
@@ -435,7 +425,7 @@
 
             <!-- Çalışma Saatleri -->
             <div id="tab-cs-@m.Id" class="tab-pane">
-                <a href="@Url.Action("CalismaSaatleri","Owner", new {mekanId=m.Id})" class="btn-add" style="margin-bottom:14px;">Çalışma Saatlerini Düzenle</a>
+                <a href="@Url.Action("CalismaSaatleri","Owner", new {mekanId=m.Id})" class="btn-add" style="margin-bottom:12px;">Çalışma Saatlerini Düzenle</a>
                 @{
                     var gunAdlari = new[] { "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar" };
                 }
@@ -467,35 +457,44 @@
                     </table>
                 }
                 else
-                { <p style="font-size:13px;color:var(--muted);margin-top:8px;">Henüz çalışma saati girilmemiş.</p> }
+                { <p style="font-size:13px;color:var(--muted);margin-top:8px;">Henüz çalışma saati girilmemiş. Düzenle butonuna tıklayın.</p> }
             </div>
 
             <!-- İstatistik -->
             <div id="tab-s-@m.Id" class="tab-pane">
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:24px;">
-                    @{ var ozet = new[] {
-                        (m.GoruntulmeSayisi.ToString(), "Görüntülenme", "var(--primary)"),
-                        ((m.Favorileyenler.Count).ToString(), "Favori", "#e11d48"),
-                        ((m.Yorumlar.Count).ToString(), "Yorum", "#059669"),
-                        (m.OrtalamaYorum.HasValue ? m.OrtalamaYorum.Value.ToString("F1") : "—", "Ort. Puan", "#f59e0b"),
-                        ((m.Fotolar.Count).ToString(), "Fotoğraf", "var(--text)"),
-                        ((m.Rezervasyonlar.Count).ToString(), "Rezervasyon", "#7c3aed"),
-                    }; }
-                    @foreach (var (sayi, label, renk) in ozet)
-                    {
-                        <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
-                            <div style="font-size:24px;font-weight:900;color:@renk;">@sayi</div>
-                            <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;">@label</div>
-                        </div>
-                    }
+                    <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:900;color:var(--primary);">@m.GoruntulmeSayisi</div>
+                        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;">Görüntülenme</div>
+                    </div>
+                    <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:900;color:#e11d48;">@m.Favorileyenler.Count</div>
+                        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;">Favori</div>
+                    </div>
+                    <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:900;color:#059669;">@m.Yorumlar.Count</div>
+                        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;">Yorum</div>
+                    </div>
+                    <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:900;color:#f59e0b;">@(m.OrtalamaYorum.HasValue ? m.OrtalamaYorum.Value.ToString("F1") : "—")</div>
+                        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;">Ort. Puan</div>
+                    </div>
+                    <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:900;color:var(--text);">@m.Fotolar.Count</div>
+                        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;">Fotoğraf</div>
+                    </div>
+                    <div style="background:var(--bg);border-radius:10px;padding:16px;text-align:center;">
+                        <div style="font-size:24px;font-weight:900;color:#7c3aed;">@m.Rezervasyonlar.Count</div>
+                        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;">Rezervasyon</div>
+                    </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;">
                     <div style="background:var(--bg);border-radius:12px;padding:16px;">
-                        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Yıldız Dağılımı</div>
+                        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text);">Yıldız Dağılımı</div>
                         <canvas id="chart-puan-@m.Id" height="180"></canvas>
                     </div>
                     <div style="background:var(--bg);border-radius:12px;padding:16px;">
-                        <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Özet</div>
+                        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text);">Özet</div>
                         <canvas id="chart-ozet-@m.Id" height="180"></canvas>
                     </div>
                 </div>
@@ -538,11 +537,9 @@
                 </script>
             </div>
 
-            <!-- Alt Bar -->
             <div class="vpc-ft">
-                <a href="@Url.Action("Detay","Mekan", new {id=m.Id})" class="btn-xs btn-xs-edit">Görüntüle</a>
                 <form asp-action="MekanSil" asp-controller="Owner" asp-route-id="@m.Id" method="post"
-                      onsubmit="return confirm('@m.Ad silinsin mi?')" style="margin-left:auto;">
+                      onsubmit="return confirm('@m.Ad silinsin mi?')">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="btn-del-v">Mekanı Sil</button>
                 </form>
@@ -553,16 +550,10 @@
 </div>
 
 <script>
-var csrfToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
+const CSRF = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 function post(url, data) {
-    return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': csrfToken },
-        body: new URLSearchParams(data)
-    }).then(r => r.json());
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': CSRF }, body: new URLSearchParams(data) }).then(r => r.json());
 }
-
 function toggleAcik(btn, id) {
     var acik = btn.classList.contains('is-open');
     post('/Owner/DurumGuncelle', { id: id, alan: 'su_an_acik', deger: !acik }).then(r => {
@@ -573,21 +564,16 @@ function toggleAcik(btn, id) {
         }
     });
 }
-
-var _dt = {};
+const _dt = {};
 function dolulukGuncelle(slider, id) {
     document.getElementById('dol-' + id).textContent = '%' + slider.value;
     clearTimeout(_dt[id]);
     _dt[id] = setTimeout(() => post('/Owner/DurumGuncelle', { id: id, alan: 'doluluk_orani', deger: slider.value }), 600);
 }
-
 function duyuruGuncelle(id) {
     var val = document.getElementById('duyuru-' + id).value;
-    post('/Owner/DurumGuncelle', { id: id, alan: 'anlik_duyuru', deger: val }).then(r => {
-        if (r.ok) alert('Duyuru yayınlandı.');
-    });
+    post('/Owner/DurumGuncelle', { id: id, alan: 'anlik_duyuru', deger: val }).then(r => { if (r.ok) alert('Duyuru yayınlandı.'); });
 }
-
 function sekmeAc(evt, id) {
     var kart = evt.target.closest('.vpc');
     kart.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -595,15 +581,16 @@ function sekmeAc(evt, id) {
     document.getElementById(id).classList.add('active');
     evt.target.classList.add('active');
 }
-
 function rezFiltre(btn, durum, mekanId) {
     var satirlar = document.querySelectorAll('.rez-satir-' + mekanId);
     satirlar.forEach(tr => {
         tr.style.display = (durum === 'TUMU' || tr.dataset.durum === durum) ? '' : 'none';
     });
     btn.closest('.tab-pane').querySelectorAll('.rez-filtre-btn').forEach(b => {
-        b.style.background = ''; b.style.color = '';
+        b.style.background = '';
+        b.style.color = '';
     });
-    btn.style.background = 'var(--primary)'; btn.style.color = 'white';
+    btn.style.background = 'var(--primary)';
+    btn.style.color = 'white';
 }
 </script>

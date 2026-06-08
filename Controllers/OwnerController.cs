@@ -34,6 +34,9 @@ public class OwnerController : Controller
         var user = await GetOwnerAsync();
         if (user == null) return RedirectToAction("Dashboard", "Home");
 
+        ViewBag.TwoFaDogrulandi = user.TwoFaDogrulandi;
+        ViewBag.UserName = user.UserName;
+
         var mekanlar = await _db.Mekanlar
             .Include(m => m.Yorumlar)
             .Include(m => m.Etkinlikler)
@@ -116,7 +119,8 @@ public class OwnerController : Controller
             CalismaAlaniVar = mekan.CalismaAlaniVar, OtoparkVar = mekan.OtoparkVar,
             SigaraIcinUygun = mekan.SigaraIcinUygun, BahceVar = mekan.BahceVar,
             EngelliErizimiVar = mekan.EngelliErizimiVar, CanliMuzikVar = mekan.CanliMuzikVar,
-            EvcilHayvanIzinli = mekan.EvcilHayvanIzinli, CocukOyunAlaniVar = mekan.CocukOyunAlaniVar
+            EvcilHayvanIzinli = mekan.EvcilHayvanIzinli, CocukOyunAlaniVar = mekan.CocukOyunAlaniVar,
+            MevcutImgUrl = mekan.ImgUrl
         });
     }
 
@@ -298,6 +302,18 @@ public class OwnerController : Controller
 
     // ── Kampanya ──────────────────────────────────────────────────────────────
 
+    [HttpGet]
+    public async Task<IActionResult> KampanyaOlustur(int mekanId)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+        var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId == user.Id);
+        if (mekan == null) return NotFound();
+        ViewBag.MekanId = mekanId;
+        ViewBag.MekanAd = mekan.Ad;
+        return View();
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> KampanyaOlustur(int mekanId, string baslik, string aciklama,
@@ -345,6 +361,18 @@ public class OwnerController : Controller
 
     // ── Etkinlik ──────────────────────────────────────────────────────────────
 
+    [HttpGet]
+    public async Task<IActionResult> EtkinlikOlustur(int mekanId)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+        var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId == user.Id);
+        if (mekan == null) return NotFound();
+        ViewBag.MekanId = mekanId;
+        ViewBag.MekanAd = mekan.Ad;
+        return View();
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EtkinlikOlustur(int mekanId, string baslik, string? aciklama,
@@ -366,6 +394,41 @@ public class OwnerController : Controller
         await _db.SaveChangesAsync();
 
         TempData["Mesaj"] = "Etkinlik eklendi.";
+        return RedirectToAction("Dashboard");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EtkinlikDuzenle(int id)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+        var e = await _db.Etkinlikler.Include(e => e.Mekan)
+            .FirstOrDefaultAsync(e => e.Id == id && e.Mekan.SahibiId == user.Id);
+        if (e == null) return NotFound();
+        ViewBag.Etkinlik = e;
+        return View(e);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EtkinlikDuzenle(int id, string baslik, string? aciklama,
+        DateTime baslangic, DateTime bitis, IFormFile? foto)
+    {
+        var user = await GetOwnerAsync();
+        if (user == null) return RedirectToAction("Dashboard", "Home");
+        var e = await _db.Etkinlikler.Include(e => e.Mekan)
+            .FirstOrDefaultAsync(e => e.Id == id && e.Mekan.SahibiId == user.Id);
+        if (e == null) return NotFound();
+
+        e.Baslik = baslik;
+        e.Aciklama = aciklama ?? "";
+        e.Baslangic = baslangic;
+        e.Bitis = bitis;
+        if (foto != null)
+            e.FotoUrl = await _cloudinary.YukleAsync(foto);
+
+        await _db.SaveChangesAsync();
+        TempData["Mesaj"] = "Etkinlik güncellendi.";
         return RedirectToAction("Dashboard");
     }
 
@@ -439,10 +502,18 @@ public class OwnerController : Controller
         var mekan = await _db.Mekanlar.FirstOrDefaultAsync(m => m.Id == mekanId && m.SahibiId == user.Id);
         if (mekan == null) return NotFound();
 
+        var fotoSil = Request.Form["menu_foto_sil"] == "1";
+        var pdfSil  = Request.Form["menu_pdf_sil"]  == "1";
+
         if (menu_foto != null)
             mekan.MenuFotoUrl = await _cloudinary.YukleAsync(menu_foto);
+        else if (fotoSil)
+            mekan.MenuFotoUrl = null;
+
         if (menu_pdf != null)
             mekan.MenuPdfUrl = await _cloudinary.YukleAsync(menu_pdf);
+        else if (pdfSil)
+            mekan.MenuPdfUrl = null;
 
         await _db.SaveChangesAsync();
         TempData["Mesaj"] = "Menü güncellendi.";

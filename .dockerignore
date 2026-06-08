@@ -1,0 +1,10 @@
+bin/
+obj/
+*.db
+*.db-shm
+*.db-wal
+.vs/
+wwwroot/uploads/
+appsettings.Development.json
+secrets.json
+.git/

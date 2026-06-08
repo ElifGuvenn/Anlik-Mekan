@@ -64,6 +64,8 @@ public class ListeController : Controller
             .FirstOrDefaultAsync(l => l.Id == listeId && l.OlusturanId == user!.Id);
         var mekan = await _db.Mekanlar.FindAsync(mekanId);
         if (liste == null || mekan == null) return NotFound();
+        if (liste.Mekanlar.Any(m => m.Id == mekanId))
+            return Json(new { ok = false, mesaj = "Bu mekan zaten listede." });
         liste.Mekanlar.Add(mekan);
         await _db.SaveChangesAsync();
         return Json(new { ok = true, mesaj = $"\"{mekan.Ad}\" listeye eklendi." });

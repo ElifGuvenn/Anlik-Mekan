@@ -186,6 +186,15 @@ public class HomeController : Controller
         var qs = _db.Mekanlar.Where(m => m.IsApproved &&
             (m.Ad.Contains(q) || m.Adres.Contains(q) || (m.Sehir != null && m.Sehir.Contains(q))));
 
+        if (filtre == "calisma")
+            qs = qs.Where(m => m.Kategori == "KUTUPHANE" || m.CalismaAlaniVar);
+        else if (filtre == "eczane")
+            qs = qs.Where(m => m.Kategori == "ECZANE");
+        else if (filtre == "acik")
+            qs = qs.Where(m => m.SuAnAcik);
+        else if (filtre == "favori" && user != null)
+            qs = qs.Where(m => m.Favorileyenler.Any(u => u.Id == user.Id));
+
         var sonuclar = await qs.Take(8)
             .Select(m => new { m.Id, m.Ad, m.Kategori, m.Sehir })
             .ToListAsync();

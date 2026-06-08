@@ -253,10 +253,11 @@ public class MekanController : Controller
         var user = await _userManager.GetUserAsync(User);
         var now = DateTime.UtcNow;
 
-        // Tüm etkinlikler ve kampanyalar (bitmemişler)
+        // Etkinlikler: son 3 ay + gelecek
+        var gecmisBaslangic = now.AddMonths(-3);
         var etkinliklerQ = _db.Etkinlikler
             .Include(e => e.Mekan)
-            .Where(e => e.Bitis >= now)
+            .Where(e => e.Baslangic >= gecmisBaslangic)
             .AsQueryable();
 
         var kampanyalarQ = _db.Kampanyalar
@@ -295,14 +296,17 @@ public class MekanController : Controller
 
         foreach (var e in etkinlikler)
         {
+            var gecmis = e.Bitis < now;
             events.Add(new {
                 id = $"e_{e.Id}",
                 title = e.Baslik + " — " + e.Mekan.Ad,
                 start = e.Baslangic.ToString("yyyy-MM-ddTHH:mm:ss"),
                 end = e.Bitis.ToString("yyyy-MM-ddTHH:mm:ss"),
-                color = etkinlikRenk,
+                color = gecmis ? "#94a3b8" : etkinlikRenk,
+                textColor = gecmis ? "#64748b" : "white",
                 extendedProps = new {
                     tip = "etkinlik",
+                    gecmis,
                     mekanAd = e.Mekan.Ad,
                     aciklama = e.Aciklama,
                     fotoUrl = e.FotoUrl,

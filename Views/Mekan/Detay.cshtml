@@ -273,6 +273,24 @@
                 </div>
             }
 
+            @if (!string.IsNullOrEmpty(Model.Mekan.MenuFotoUrl) || !string.IsNullOrEmpty(Model.Mekan.MenuPdfUrl))
+            {
+                <div class="card">
+                    <div class="card-baslik">🍽️ Menü</div>
+                    @if (!string.IsNullOrEmpty(Model.Mekan.MenuFotoUrl))
+                    {
+                        <img src="@Model.Mekan.MenuFotoUrl" alt="Menü" style="width:100%;border-radius:10px;border:1px solid var(--border);margin-bottom:10px;">
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Mekan.MenuPdfUrl))
+                    {
+                        <a href="@Model.Mekan.MenuPdfUrl" target="_blank"
+                           style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:var(--primary);color:white;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">
+                            📄 Menü PDF'ini Görüntüle
+                        </a>
+                    }
+                </div>
+            }
+
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <div class="card">

@@ -183,8 +183,9 @@ public class HomeController : Controller
             return Json(new { sonuclar = Array.Empty<object>() });
 
         var user = await _userManager.GetUserAsync(User);
+        var qLower = q.ToLower();
         var qs = _db.Mekanlar.Where(m => m.IsApproved &&
-            (m.Ad.Contains(q) || m.Adres.Contains(q) || (m.Sehir != null && m.Sehir.Contains(q))));
+            (m.Ad.ToLower().Contains(qLower) || m.Adres.ToLower().Contains(qLower) || (m.Sehir != null && m.Sehir.ToLower().Contains(qLower))));
 
         if (filtre == "calisma")
             qs = qs.Where(m => m.Kategori == "KUTUPHANE" || m.CalismaAlaniVar);

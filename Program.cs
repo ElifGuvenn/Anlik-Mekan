@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using AnlikMekanCore.Models;
@@ -63,6 +64,11 @@ builder.Services.AddControllersWithViews();
 // Rol claim'ini cookie'ye ekle
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsPrincipalFactory>();
 
+// Data Protection: container yeniden başlayınca oturumlar kapanmasın diye anahtarları DB'de sakla
+builder.Services.AddDataProtection()
+    .SetApplicationName("AnlikMekan")
+    .PersistKeysToDbContext<AppDbContext>();
+
 // Servisler
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<TotpService>();
@@ -76,6 +82,18 @@ var app = builder.Build();
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+
+    // Mevcut PostgreSQL DB'de DataProtectionKeys tablosu yoksa oluştur
+    if (db.Database.ProviderName?.Contains("Npgsql") == true)
+    {
+        db.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS ""DataProtectionKeys"" (
+                ""Id"" SERIAL PRIMARY KEY,
+                ""FriendlyName"" TEXT,
+                ""Xml"" TEXT
+            )
+        ");
+    }
 
     if (!db.Mekanlar.Any())
     {

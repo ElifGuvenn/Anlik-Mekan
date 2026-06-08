@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AnlikMekanCore.Models.Entities;
 
 namespace AnlikMekanCore.Models;
 
-public class AppDbContext : IdentityDbContext<AppUser>
+public class AppDbContext : IdentityDbContext<AppUser>, IDataProtectionKeyContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     public DbSet<Mekan> Mekanlar => Set<Mekan>();
     public DbSet<MekanFoto> MekanFotolar => Set<MekanFoto>();

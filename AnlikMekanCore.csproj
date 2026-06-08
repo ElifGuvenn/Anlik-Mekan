@@ -24,6 +24,8 @@
     <PackageReference Include="CloudinaryDotNet" Version="1.26.2" />
     <!-- TOTP (2FA) -->
     <PackageReference Include="Otp.NET" Version="1.4.0" />
+    <!-- Data Protection (key persistence) -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="9.0.5" />
     <!-- Mail -->
     <PackageReference Include="MailKit" Version="4.11.0" />
     <!-- QR Kod -->

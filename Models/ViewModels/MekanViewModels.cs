@@ -140,4 +140,5 @@ public class HaritaMekanJson
     public bool EngelliErizimiVar { get; set; }
     public bool CanliMuzikVar { get; set; }
     public bool SigaraIcinUygun { get; set; }
+    public double? MesafeM { get; set; }
 }

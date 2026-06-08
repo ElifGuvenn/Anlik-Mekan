@@ -197,14 +197,20 @@ public class MekanController : Controller
         if (!string.IsNullOrEmpty(acik))
             mekanlar = mekanlar.Where(m => m.AcikMi).ToList();
 
-        // Konuma göre sıralama
-        if (double.TryParse(lat, out var ulat) && double.TryParse(lng, out var ulng))
+        // Konuma göre sıralama — GoruntulmeSayisi'ni bozmadan ayrı mesafe hesapla
+        double? kullaniciLat = null, kullaniciLng = null;
+        if (double.TryParse(lat, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var ulat) &&
+            double.TryParse(lng, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var ulng))
         {
-            foreach (var m in mekanlar)
-                m.GoruntulmeSayisi = m.Latitude.HasValue
-                    ? (int)(HaversineM(ulat, ulng, (double)m.Latitude, (double)m.Longitude!.Value))
-                    : 999999;
-            mekanlar = mekanlar.OrderBy(m => m.GoruntulmeSayisi).ToList();
+            kullaniciLat = ulat;
+            kullaniciLng = ulng;
+            mekanlar = mekanlar
+                .OrderBy(m => m.Latitude.HasValue
+                    ? HaversineM(ulat, ulng, (double)m.Latitude, (double)m.Longitude!.Value)
+                    : double.MaxValue)
+                .ToList();
         }
 
         var haritaVerisi = mekanlar
@@ -221,7 +227,11 @@ public class MekanController : Controller
                 ImgUrl = m.ImgUrl, WifiVar = m.WifiVar, PrizVar = m.PrizVar,
                 BahceVar = m.BahceVar, EvcilHayvanIzinli = m.EvcilHayvanIzinli,
                 EngelliErizimiVar = m.EngelliErizimiVar, CanliMuzikVar = m.CanliMuzikVar,
-                SigaraIcinUygun = m.SigaraIcinUygun
+                SigaraIcinUygun = m.SigaraIcinUygun,
+                MesafeM = kullaniciLat.HasValue
+                    ? HaversineM(kullaniciLat.Value, kullaniciLng!.Value,
+                        (double)m.Latitude!, (double)m.Longitude!)
+                    : null
             }).ToList();
 
         ViewBag.HaritaVerisiJson = JsonSerializer.Serialize(haritaVerisi,

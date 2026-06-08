@@ -90,8 +90,16 @@
                 var adres2 = item.GetProperty("adres").GetString() ?? "";
                 var acik2 = item.GetProperty("suAnAcik").GetBoolean();
                 var kat2 = item.GetProperty("kategoriDisplay").GetString() ?? "";
+                var mesafe2 = (item.TryGetProperty("mesafeM", out var mp) && mp.ValueKind == System.Text.Json.JsonValueKind.Number) ? (double?)mp.GetDouble() : null;
+                var mesafeYazi2 = mesafe2.HasValue ? (mesafe2.Value < 1000 ? $"{(int)mesafe2.Value} m" : $"{mesafe2.Value / 1000:F1} km") : null;
                 <div class="mekan-liste-item" onclick="odaklan(@mekanId2)" data-id="@mekanId2">
-                    <div class="item-ad">@ad2</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+                        <div class="item-ad">@ad2</div>
+                        @if (mesafeYazi2 != null)
+                        {
+                            <span style="font-size:11px;font-weight:700;color:var(--primary);white-space:nowrap;flex-shrink:0;">📍 @mesafeYazi2</span>
+                        }
+                    </div>
                     <div class="item-adres">@kat2@(!string.IsNullOrEmpty(adres2) ? " · " + adres2.Substring(0, Math.Min(adres2.Length,40)) : "")</div>
                     <div class="item-badges">
                         @if (acik2) { <span class="mini-badge mb-acik">Açık</span> }

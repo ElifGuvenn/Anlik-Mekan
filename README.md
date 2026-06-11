@@ -9,12 +9,6 @@ Gerçek zamanlı mekan keşif ve yönetim platformu. Kullanıcılar yakınların
 - [Özellikler](#özellikler)
 - [Teknoloji Yığını](#teknoloji-yığını)
 - [Kurulum](#kurulum)
-- [Yapılandırma](#yapılandırma)
-- [Kullanıcı Rolleri](#kullanıcı-rolleri)
-- [Uygulama Modülleri](#uygulama-modülleri)
-- [Veritabanı Şeması](#veritabanı-şeması)
-- [API Uç Noktaları](#api-uç-noktaları)
-- [Dağıtım](#dağıtım)
 
 ---
 

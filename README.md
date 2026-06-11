@@ -35,7 +35,7 @@ Gerçek zamanlı mekan keşif ve yönetim platformu. Kullanıcılar yakınların
 
 ### Admin Özellikleri
 - **Mekan Onaylama** — Yeni eklenen mekanları incele, onayla veya reddet
-- **Veri Aktarımı** — JSON dosyasından toplu mekan verisi içe aktar
+
 
 ---
 
